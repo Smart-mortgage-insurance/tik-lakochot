@@ -51,6 +51,8 @@ input,select,textarea{width:100%;background:var(--surface-2);border:1px solid va
 .btn{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px 15px;font:inherit;font-weight:600;cursor:pointer}
 .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
 .btn.danger{background:var(--bad)}
+.iconbtn{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);width:38px;height:38px;min-width:38px;border-radius:11px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
 .rowbtns{display:flex;gap:8px;justify-content:space-between;margin-top:15px;flex-wrap:wrap}
 .gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
 .gate .box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px;width:320px;text-align:center}
@@ -102,10 +104,10 @@ input,select,textarea{width:100%;background:var(--surface-2);border:1px solid va
 <script>
 const SB_URL="https://ktcabahjyjmtfavlsdks.supabase.co";
 const SB_KEY="sb_publishable_jYj0az-JCWUc3ga1fRYcew_La1y7qVw";
-const STATUSES=["נסגר בישיר","נסגר בליברה","נסגר בשוירץ","הצעה - בתהליך","עבר לישיר - לא סגר","ביטל סגירה","לזיהוי מהקלטות","לא רלוונטי","לא ידוע","נסגר"];
+const STATUSES=["ממתין לשליחת ליד","הצעה בתהליך - ליברה","הצעה בתהליך - ישיר","הצעה בתהליך - שוירץ","נסגר בליברה","נסגר בישיר","נסגר בשוירץ","ביטל סגירה","לזיהוי מהקלטות","לא רלוונטי","לא ידוע","נסגר"];
 const CHANS=["ישיר","ליברה","שוירץ"];
 const EDITABLE=[["name","שם"],["phone","טלפון"],["id_number","ת.ז."],["mortgage","סכום משכנתא"],["premium","פרמיה חודשית"],["commission_to_client","עמלה ללקוח"],["referral_source","מקור הפניה"],["notes","הערות"]];
-const pillClass=s=>(s||"").startsWith("נסגר")?"ok":(s==="עבר לישיר - לא סגר"||s==="הצעה - בתהליך")?"warn":s==="ביטל סגירה"?"bad":"neut";
+const pillClass=s=>(s||"").startsWith("נסגר")?"ok":(s||"").startsWith("הצעה")?"warn":s==="ביטל סגירה"?"bad":"neut";
 const fmtPhone=p=>{p=(p||"").replace(/\D/g,"");return p.length===9?"0"+p:p;};
 const esc=s=>(s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const val=id=>document.getElementById(id).value;
@@ -166,8 +168,8 @@ function buildChips(){
 function setStatus(s){fStatus=s;buildChips();render();}
 function setChannel(s){fChannel=s;buildChips();render();}
 function tiles(){
-  const a=CLIENTS,closed=a.filter(c=>c.closed||(c.status||"").startsWith("נסגר")).length,moved=a.filter(c=>c.status==="עבר לישיר - לא סגר").length,comm=a.filter(c=>c.commission_to_client).length,twice=a.filter(c=>c.closed_twice).length;
-  const T=[["acc",a.length,"סה״כ לקוחות"],["ok",closed,"נסגרו"],["warn",moved,"עברו לישיר · לא סגרו"],["",twice,"נסגרו פעמיים"],["",comm,"עם עמלה"]];
+  const a=CLIENTS,closed=a.filter(c=>c.closed||(c.status||"").startsWith("נסגר")).length,inproc=a.filter(c=>(c.status||"").startsWith("הצעה")).length,waiting=a.filter(c=>c.status==="ממתין לשליחת ליד").length,comm=a.filter(c=>c.commission_to_client).length;
+  const T=[["acc",a.length,"סה״כ לקוחות"],["ok",closed,"נסגרו"],["warn",inproc,"בהצעה / בתהליך"],["",waiting,"ממתין לשליחה"],["",comm,"עם עמלה"]];
   document.getElementById("tiles").innerHTML=T.map(([c,n,l])=>`<div class="tile ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
 }
 function render(){
@@ -186,35 +188,50 @@ function render(){
   }).join("")||`<div class="count">אין תוצאות</div>`;
 }
 function fld(k,v){return v?`<div class="field"><span class="k">${k}</span><span class="v">${v}</span></div>`:"";}
-function openCard(id){
-  const c=CLIENTS.find(x=>x.id===id);if(!c)return;
-  document.getElementById("cardBody").innerHTML=`
-    <h2>${esc(c.name)}</h2>
-    <div class="sub" style="margin-bottom:10px"><span class="pill ${pillClass(c.status)}">${esc(c.status)}</span></div>
-    ${fld("טלפון",c.phone?'<span class="mono">'+fmtPhone(c.phone)+'</span>':"")}
-    ${fld("ת.ז.",esc(c.id_number))}
-    ${fld("סכום משכנתא",c.mortgage?('<span class=mono>'+esc(c.mortgage)+'</span>'):"")}
-    ${fld("פרמיה חודשית",c.premium?esc(c.premium)+" ₪":"")}
-    ${fld("ערוצים",chan(c).join(" · "))}
-    ${fld("עמלה ללקוח",esc(c.commission_to_client))}${fld("תשלום שהתקבל",esc(c.paid_to_avi))}${fld("מקור הפניה",esc(c.referral_source))}
-    ${fld("נסגר פעמיים",c.closed_twice?"כן":"")}
-    ${fld("סטטוס ליד בישיר",esc(c.yashir_status))}${fld("סטטוס במייל",esc(c.email_status))}
-    ${fld("מס' שיחות מוקלטות",c.call_count||"")}
-    ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:13px;color:var(--muted);padding:6px 0;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
-    ${fld("הערות",esc(c.notes))}
-    <div class="edit">
-      ${EDITABLE.map(([f,l])=>f==="notes"?`<label>${l}</label><textarea id="ed_${f}" rows="2">${esc(c[f])}</textarea>`:`<label>${l}</label><input id="ed_${f}" value="${esc(f==="phone"?fmtPhone(c[f]):c[f])}">`).join("")}
-      <label>ליד הועבר ל:</label>
-      <div style="display:flex;gap:14px;padding:4px 0">${CHANS.map((ch,i)=>`<label style="font-size:14px;color:var(--ink)"><input type="checkbox" id="ch${i}" style="width:auto" ${chan(c).includes(ch)?"checked":""}> ${ch}</label>`).join("")}</div>
-      <label>סטטוס</label><select id="ed_status">${STATUSES.map(s=>`<option ${s===c.status?"selected":""}>${s}</option>`).join("")}</select>
-      <label>תשלום שהתקבל (₪)</label>
-      <div style="display:flex;gap:6px"><input id="ed_paid_to_avi" value="${esc(c.paid_to_avi)}" style="flex:1"><button class="btn ghost" type="button" onclick="calcPay()">חשב לפי הערוץ</button></div>
-    </div>
-    <div class="rowbtns">
-      <button class="btn danger" onclick="delClient('${c.id}')">מחק</button>
-      <div style="display:flex;gap:8px"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="saveClient('${c.id}')">שמור</button></div>
-    </div>`;
-  document.getElementById("ovl").classList.add("on");
+let _cardId=null;
+function openCard(id){ _cardId=id; renderCard(false); document.getElementById("ovl").classList.add("on"); }
+function renderCard(editing){
+  const c=CLIENTS.find(x=>x.id===_cardId); if(!c)return;
+  const b=document.getElementById("cardBody");
+  if(!editing){
+    b.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div><h2 style="margin:0">${esc(c.name)}</h2>
+          <div style="margin-top:6px"><span class="pill ${pillClass(c.status)}">${esc(c.status)}</span></div></div>
+        <button class="iconbtn" onclick="renderCard(true)" title="עריכה" aria-label="עריכה">✎</button>
+      </div>
+      <div style="margin-top:12px">
+        ${fld("טלפון",c.phone?'<span class="mono">'+fmtPhone(c.phone)+'</span>':"")}
+        ${fld("ת.ז.",esc(c.id_number))}
+        ${fld("סכום משכנתא",c.mortgage?('<span class=mono>'+esc(c.mortgage)+' ₪</span>'):"")}
+        ${fld("פרמיה חודשית",c.premium?esc(c.premium)+" ₪":"")}
+        ${fld("ליד הועבר ל",chan(c).join(" · "))}
+        ${fld("עמלה ללקוח",esc(c.commission_to_client))}
+        ${fld("תשלום שהתקבל",c.paid_to_avi?('<span class=mono>'+esc(c.paid_to_avi)+' ₪</span>'):"")}
+        ${fld("מקור הפניה",esc(c.referral_source))}
+        ${fld("נסגר פעמיים",c.closed_twice?"כן":"")}
+        ${fld("סטטוס ליד בישיר",esc(c.yashir_status))}${fld("סטטוס במייל",esc(c.email_status))}
+        ${fld("מס' שיחות מוקלטות",c.call_count||"")}
+        ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:13px;color:var(--muted);padding:6px 0;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
+        ${fld("הערות",esc(c.notes))}
+      </div>
+      <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="renderCard(true)">✎ עריכה</button></div>`;
+  } else {
+    b.innerHTML=`
+      <h2 style="margin:0 0 12px">עריכת לקוח</h2>
+      <div class="edit">
+        ${EDITABLE.map(([f,l])=>f==="notes"?`<label>${l}</label><textarea id="ed_${f}" rows="2">${esc(c[f])}</textarea>`:`<label>${l}</label><input id="ed_${f}" value="${esc(f==="phone"?fmtPhone(c[f]):c[f])}">`).join("")}
+        <label>ליד הועבר ל:</label>
+        <div style="display:flex;gap:14px;padding:4px 0">${CHANS.map((ch,i)=>`<label style="font-size:14px;color:var(--ink)"><input type="checkbox" id="ch${i}" style="width:auto" ${chan(c).includes(ch)?"checked":""}> ${ch}</label>`).join("")}</div>
+        <label>סטטוס</label><select id="ed_status">${STATUSES.map(s=>`<option ${s===c.status?"selected":""}>${s}</option>`).join("")}</select>
+        <label>תשלום שהתקבל (₪)</label>
+        <div style="display:flex;gap:6px"><input id="ed_paid_to_avi" value="${esc(c.paid_to_avi)}" style="flex:1"><button class="btn ghost" type="button" onclick="calcPay()">חשב לפי הערוץ</button></div>
+      </div>
+      <div class="rowbtns">
+        <button class="btn danger" onclick="delClient('${c.id}')">מחק</button>
+        <div style="display:flex;gap:8px"><button class="btn ghost" onclick="renderCard(false)">ביטול</button><button class="btn" onclick="saveClient('${c.id}')">שמור</button></div>
+      </div>`;
+  }
 }
 function collectEdit(){
   const o={};EDITABLE.forEach(([f])=>{o[f]=val("ed_"+f);});
@@ -238,7 +255,7 @@ async function saveClient(id){
   const o=collectEdit();
   const r=await api("/rest/v1/clients?id=eq."+id,{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify(o)});
   if(!r.ok){alert("שמירה נכשלה");return;}
-  closeCard();await loadClients();
+  await loadClients();renderCard(false);
 }
 async function delClient(id){
   if(!confirm("למחוק את הלקוח לצמיתות?"))return;
@@ -256,7 +273,7 @@ function openAdd(){
       <label>סכום משכנתא</label><input id="ad_mortgage">
       <label>פרמיה חודשית</label><input id="ad_premium">
       <label>ערוצים (מופרד בפסיק)</label><input id="ad_channels" placeholder="ליברה, ישיר, שוירץ">
-      <label>סטטוס</label><select id="ad_status">${STATUSES.map(s=>`<option ${s==="הצעה - בתהליך"?"selected":""}>${s}</option>`).join("")}</select>
+      <label>סטטוס</label><select id="ad_status">${STATUSES.map(s=>`<option ${s==="ממתין לשליחת ליד"?"selected":""}>${s}</option>`).join("")}</select>
       <label>הערות</label><textarea id="ad_notes" rows="2"></textarea>
     </div>
     <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">ביטול</button><button class="btn" onclick="addClient()">הוסף</button></div>`;
@@ -351,7 +368,7 @@ function computeRec(){
 async function saveLead(){
   if(!_lead||!_lead.name){alert('צריך שם');return;}
   const o={name:_lead.name,phone:_lead.phone||null,id_number:_lead.idn||null,
-    mortgage:_lead.mort?String(_lead.mort):null,status:'הצעה - בתהליך',channels:_lead.chans,notes:'ליד חדש (ממנוע ההמלצה)'};
+    mortgage:_lead.mort?String(_lead.mort):null,status:'ממתין לשליחת ליד',channels:_lead.chans,notes:'ליד חדש (ממנוע ההמלצה)'};
   const r=await api('/rest/v1/clients',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(o)});
   if(!r.ok){alert('שמירה נכשלה');return;}
   closeCard();await loadClients();
