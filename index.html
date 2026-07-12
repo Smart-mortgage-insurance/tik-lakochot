@@ -6,106 +6,312 @@
 <meta name="robots" content="noindex,nofollow">
 <title>תיק לקוחות — ביטוח משכנתא</title>
 <style>
-:root{--bg:#eef1f5;--surface:#fff;--surface-2:#f4f6f9;--ink:#18202e;--muted:#5c6779;--line:#d9dee7;--accent:#0f6d68;--accent-soft:#d7ebe9;--ok:#1a8a57;--ok-bg:#e0f2e8;--warn:#b5751f;--warn-bg:#f8ecd7;--bad:#bf3f38;--bad-bg:#f8e0de;--neut:#6a7383;--neut-bg:#e8ebf0;}
-@media (prefers-color-scheme:dark){:root{--bg:#10141b;--surface:#18202a;--surface-2:#1e2732;--ink:#e8ecf2;--muted:#98a3b3;--line:#2a3542;--accent:#3fb5ad;--accent-soft:#173430;--ok:#48c78e;--ok-bg:#123526;--warn:#e0a94a;--warn-bg:#3a2e15;--bad:#e06a62;--bad-bg:#3a1f1d;--neut:#8a94a4;--neut-bg:#232c38;}}
-:root[data-theme="dark"]{--bg:#10141b;--surface:#18202a;--surface-2:#1e2732;--ink:#e8ecf2;--muted:#98a3b3;--line:#2a3542;--accent:#3fb5ad;--accent-soft:#173430;--ok:#48c78e;--ok-bg:#123526;--warn:#e0a94a;--warn-bg:#3a2e15;--bad:#e06a62;--bad-bg:#3a1f1d;--neut:#8a94a4;--neut-bg:#232c38;}
-:root[data-theme="light"]{--bg:#eef1f5;--surface:#fff;--surface-2:#f4f6f9;--ink:#18202e;--muted:#5c6779;--line:#d9dee7;--accent:#0f6d68;--accent-soft:#d7ebe9;--ok:#1a8a57;--ok-bg:#e0f2e8;--warn:#b5751f;--warn-bg:#f8ecd7;--bad:#bf3f38;--bad-bg:#f8e0de;--neut:#6a7383;--neut-bg:#e8ebf0;}
-*{box-sizing:border-box}html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font-family:system-ui,"Segoe UI","Arial Hebrew",Arial,sans-serif;font-size:15px;line-height:1.5}
+:root {
+  --bg: #f3f6f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --accent: #0284c7;
+  --accent-hover: #0369a1;
+  --accent-soft: #e0f2fe;
+  --ok: #16a34a;
+  --ok-bg: #dcfce7;
+  --warn: #d97706;
+  --warn-bg: #fef3c7;
+  --bad: #dc2626;
+  --bad-bg: #fee2e2;
+  --neut: #64748b;
+  --neut-bg: #f1f5f9;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #334155;
+    --ink: #f8fafc;
+    --muted: #94a3b8;
+    --line: #334155;
+    --accent: #38bdf8;
+    --accent-hover: #7dd3fc;
+    --accent-soft: #0c4a6e;
+    --ok: #22c55e;
+    --ok-bg: #14532d;
+    --warn: #fbbf24;
+    --warn-bg: #78350f;
+    --bad: #ef4444;
+    --bad-bg: #7f1d1d;
+    --neut: #94a3b8;
+    --neut-bg: #334155;
+  }
+}
+:root[data-theme="dark"] { /* Same as prefers-color-scheme dark */
+    --bg: #0f172a; --surface: #1e293b; --surface-2: #334155; --ink: #f8fafc; --muted: #94a3b8; --line: #334155; --accent: #38bdf8; --accent-hover: #7dd3fc; --accent-soft: #0c4a6e; --ok: #22c55e; --ok-bg: #14532d; --warn: #fbbf24; --warn-bg: #78350f; --bad: #ef4444; --bad-bg: #7f1d1d; --neut: #94a3b8; --neut-bg: #334155;
+}
+:root[data-theme="light"] { /* Same as light */
+    --bg: #f3f6f9; --surface: #ffffff; --surface-2: #f8fafc; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --accent: #0284c7; --accent-hover: #0369a1; --accent-soft: #e0f2fe; --ok: #16a34a; --ok-bg: #dcfce7; --warn: #d97706; --warn-bg: #fef3c7; --bad: #dc2626; --bad-bg: #fee2e2; --neut: #64748b; --neut-bg: #f1f5f9;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { 
+  background: var(--bg); 
+  color: var(--ink); 
+  font-family: system-ui, "Segoe UI", "Arial Hebrew", Arial, sans-serif;
+  font-size: 15px; 
+  line-height: 1.6; 
+}
+
 /* ---- top app bar ---- */
-.appbar{position:sticky;top:0;z-index:15;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.appbar-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:0 18px;height:56px}
-.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;white-space:nowrap}
-.brand .logo{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px}
-.nav{display:flex;gap:2px;height:100%;flex:1}
-.nav button{background:none;border:none;color:var(--muted);font:inherit;font-weight:600;font-size:14px;padding:0 14px;height:100%;cursor:pointer;border-bottom:2.5px solid transparent;display:flex;align-items:center;gap:6px}
-.nav button:hover{color:var(--ink)}
-.nav button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
-.appbar .acts{display:flex;align-items:center;gap:6px}
-.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.wrap{max-width:1180px;margin:0 auto;padding:18px 18px 60px}
-h1{font-size:22px;margin:0}
-.sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.appbar { 
+  position: sticky; top: 0; z-index: 15; 
+  background: var(--surface); 
+  border-bottom: 1px solid var(--line); 
+  box-shadow: var(--shadow-sm); 
+}
+.appbar-in { 
+  max-width: 1280px; margin: 0 auto; 
+  display: flex; align-items: center; gap: 20px; 
+  padding: 0 20px; height: 64px; 
+}
+.brand { 
+  display: flex; align-items: center; gap: 10px; 
+  font-weight: 700; font-size: 18px; white-space: nowrap; 
+}
+.brand .logo { 
+  width: 36px; height: 36px; border-radius: 10px; 
+  background: var(--accent); color: #fff; 
+  display: flex; align-items: center; justify-content: center; font-size: 18px; 
+}
+.nav { display: flex; gap: 8px; height: 100%; flex: 1; margin-right: 20px;}
+.nav button { 
+  background: transparent; border: none; 
+  color: var(--muted); font: inherit; font-weight: 600; font-size: 15px; 
+  padding: 0 16px; height: 100%; cursor: pointer; 
+  border-bottom: 3px solid transparent; 
+  display: flex; align-items: center; gap: 8px; 
+  transition: all 0.2s ease;
+}
+.nav button:hover { color: var(--ink); background: var(--surface-2); }
+.nav button[aria-selected="true"] { 
+  color: var(--accent); border-bottom-color: var(--accent); 
+}
+.appbar .acts { display: flex; align-items: center; gap: 10px; }
+.sync { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-left: 10px;}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); }
+
+/* ---- Main Container ---- */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 80px; }
+h1 { font-size: 24px; margin: 0; font-weight: 700;}
+.sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
 /* ---- stat strip ---- */
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
-.tile::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:3px;background:var(--neut)}
-.tile.ok::before{background:var(--ok)}.tile.warn::before{background:var(--warn)}.tile.acc::before{background:var(--accent)}
-.tile .n{font-size:27px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.tile .l{color:var(--muted);font-size:12px;margin-top:5px}
-.tile.ok .n{color:var(--ok)}.tile.warn .n{color:var(--warn)}.tile.acc .n{color:var(--accent)}
+.tiles { 
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+  gap: 16px; margin-bottom: 24px; 
+}
+.tile { 
+  background: var(--surface); border: 1px solid var(--line); 
+  border-radius: var(--radius-lg); padding: 20px; 
+  position: relative; overflow: hidden; 
+  box-shadow: var(--shadow-sm); transition: transform 0.2s;
+}
+.tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.tile::before { content: ""; position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 4px; background: var(--neut); }
+.tile.ok::before { background: var(--ok); }
+.tile.warn::before { background: var(--warn); }
+.tile.acc::before { background: var(--accent); }
+.tile .n { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 4px;}
+.tile .l { color: var(--muted); font-size: 14px; font-weight: 500;}
+.tile.ok .n { color: var(--ok); }
+.tile.warn .n { color: var(--warn); }
+.tile.acc .n { color: var(--accent); }
+
 /* ---- section panel ---- */
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
-#q{flex:1;min-width:200px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;color:var(--ink);font-size:14.5px}
-select.flt{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 30px 9px 12px;color:var(--ink);font:inherit;font-size:14px;cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:left 13px center,left 8px center;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
-.count{color:var(--muted);font-size:12.5px;margin-inline-start:auto;white-space:nowrap}
+.panel { 
+  background: var(--surface); border: 1px solid var(--line); 
+  border-radius: var(--radius-lg); overflow: hidden; 
+  box-shadow: var(--shadow-sm); 
+}
+.toolbar { 
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center; 
+  padding: 16px 20px; background: var(--surface); border-bottom: 1px solid var(--line); 
+}
+#q { 
+  flex: 1; min-width: 250px; background: var(--surface-2); 
+  border: 1px solid var(--line); border-radius: var(--radius-md); 
+  padding: 10px 14px; color: var(--ink); font-size: 15px; transition: all 0.2s;
+}
+select.flt { 
+  background: var(--surface-2); border: 1px solid var(--line); 
+  border-radius: var(--radius-md); padding: 10px 36px 10px 14px; 
+  color: var(--ink); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; 
+  appearance: none; 
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); 
+  background-position: left 16px center, left 11px center; 
+  background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; transition: all 0.2s;
+}
+input:focus, select:focus, textarea:focus { 
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); 
+}
+.count { color: var(--muted); font-size: 13px; font-weight: 600; margin-inline-start: auto; white-space: nowrap; }
+
 /* ---- data table ---- */
-.tbl-scroll{overflow-x:auto}
-table.data{width:100%;border-collapse:collapse;font-size:14px}
-table.data th{position:sticky;top:56px;background:var(--surface-2);color:var(--muted);font-weight:600;font-size:12.5px;text-align:right;padding:10px 14px;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--line)}
-table.data th:hover{color:var(--ink)}
-table.data th .ar{opacity:.5;font-size:10px;margin-inline-start:3px}
-table.data th.active{color:var(--accent)}
-table.data td{padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
-table.data tbody tr{cursor:pointer;transition:background .1s}
-table.data tbody tr:hover{background:var(--surface-2)}
-table.data tbody tr:last-child td{border-bottom:none}
-td .nm{font-weight:600}
-.empty{padding:40px;text-align:center;color:var(--muted)}
+.tbl-scroll { max-height: 65vh; overflow: auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+table.data th {
+  position: sticky; top: 0; z-index: 10; background: var(--surface-2); color: var(--muted);
+  font-weight: 600; font-size: 13px; text-align: right; padding: 14px 20px;
+  white-space: nowrap; cursor: pointer; user-select: none; border-bottom: 2px solid var(--line);
+}
+table.data th:hover { color: var(--ink); background: var(--line); }
+table.data th .ar { opacity: .5; font-size: 11px; margin-inline-start: 4px; }
+table.data th.active { color: var(--accent); }
+table.data td { padding: 14px 20px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.data tbody tr { cursor: pointer; transition: background 0.15s; }
+table.data tbody tr:hover { background: var(--surface-2); }
+table.data tbody tr:last-child td { border-bottom: none; }
+td .nm { font-weight: 600; color: var(--ink); }
+.empty { padding: 60px 20px; text-align: center; color: var(--muted); font-size: 16px; font-weight: 500; }
+
 /* ---- breakdown (overview tab) ---- */
-.brk{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
-.brk .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
-.brk h3{margin:0 0 12px;font-size:15px}
-.brow{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:13.5px}
-.brow .lbl{width:150px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brow .bar{flex:1;height:8px;background:var(--surface-2);border-radius:5px;overflow:hidden}
-.brow .bar span{display:block;height:100%;background:var(--accent);border-radius:5px}
-.brow .v{width:34px;text-align:left;font-variant-numeric:tabular-nums;font-weight:600}
-.pill{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap;display:inline-block}
-.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.neut{background:var(--neut-bg);color:var(--neut)}
-.tag{font-size:11.5px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);padding:2px 7px;border-radius:6px}
-.tag.pay{background:var(--accent-soft);color:var(--accent);border-color:transparent}
-.mono{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:embed}
-@media(max-width:640px){.appbar-in{padding:0 12px;gap:10px}.nav button{padding:0 10px}.brand span{display:none}.wrap{padding:14px 12px 60px}}
-.ovl{position:fixed;inset:0;background:rgba(10,14,20,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:20}
-.ovl.on{display:flex}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:20px}
-.card h2{margin:0 0 2px;font-size:20px}
-.field{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
-.field .k{color:var(--muted);font-size:13px}.field .v{font-weight:600;text-align:left}
-.edit{margin-top:12px;display:flex;flex-direction:column;gap:7px}
-label{font-size:12.5px;color:var(--muted);margin-top:4px}
-input,select,textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px;color:var(--ink);font:inherit}
-.btn{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px 15px;font:inherit;font-weight:600;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.btn.danger{background:var(--bad)}
-.btn.sm{padding:7px 13px;font-size:13.5px;border-radius:8px}
-.abtn{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:16px;display:inline-flex;align-items:center;justify-content:center}
-.abtn:hover{border-color:var(--accent);color:var(--accent)}
-.iconbtn{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);width:38px;height:38px;min-width:38px;border-radius:11px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex:none}
-.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
-.rowbtns{display:flex;gap:8px;justify-content:space-between;margin-top:15px;flex-wrap:wrap}
-.gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
-.gate .box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px;width:320px;text-align:center}
-.gate input{margin:8px 0;text-align:center}
-.hide{display:none!important}
-.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.err{color:var(--bad);font-size:12.5px;min-height:15px;margin-top:6px}
+.brk { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+.brk .box { 
+  background: var(--surface); border: 1px solid var(--line); 
+  border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); 
+}
+.brk h3 { margin: 0 0 20px; font-size: 18px; font-weight: 600; color: var(--ink);}
+.brow { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 14px; }
+.brow .lbl { width: 140px; color: var(--muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brow .bar { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.brow .bar span { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.brow .v { width: 40px; text-align: left; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink);}
+
+/* ---- Badges & Pills ---- */
+.pill { 
+  font-size: 12.5px; font-weight: 600; padding: 4px 12px; 
+  border-radius: 999px; white-space: nowrap; display: inline-block; 
+}
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+.pill.neut { background: var(--neut-bg); color: var(--neut); }
+
+.tag { 
+  font-size: 12px; font-weight: 500; background: var(--surface-2); 
+  border: 1px solid var(--line); color: var(--muted); 
+  padding: 3px 8px; border-radius: 6px; 
+}
+.tag.pay { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 600; }
+.mono { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: embed; font-family: monospace; font-size: 14px;}
+
+/* ---- Overlays & Modals ---- */
+.ovl { 
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50; 
+}
+.ovl.on { display: flex; animation: fadeIn 0.2s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.card { 
+  background: var(--surface); border: 1px solid var(--line); 
+  border-radius: var(--radius-lg); max-width: 700px; width: 100%; 
+  max-height: 90vh; overflow-y: auto; padding: 32px; box-shadow: var(--shadow-lg); 
+  animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.card h2 { margin: 0 0 16px; font-size: 22px; font-weight: 700; border-bottom: 2px solid var(--surface-2); padding-bottom: 12px;}
+.field { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--surface-2); }
+.field:last-child { border-bottom: none; }
+.field .k { color: var(--muted); font-size: 14px; font-weight: 500; }
+.field .v { font-weight: 600; text-align: left; font-size: 15px;}
+
+/* Form Styling - Grid Layout */
+.edit { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  gap: 16px 24px; 
+  margin-top: 16px; 
+}
+.edit label { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 6px; display: block;}
+.edit input, .edit select, .edit textarea { 
+  width: 100%; background: var(--surface); border: 1px solid var(--line); 
+  border-radius: var(--radius-md); padding: 12px; color: var(--ink); font: inherit; 
+  transition: all 0.2s;
+}
+.edit textarea { grid-column: 1 / -1; resize: vertical; min-height: 80px;} /* Textareas span full width */
+.edit > div { display: flex; flex-direction: column; } /* Wrap inputs that are generated by JS if needed, but styling directly works too */
+
+/* Buttons */
+.btn { 
+  background: var(--accent); color: #fff; border: none; 
+  border-radius: var(--radius-md); padding: 10px 20px; font: inherit; font-weight: 600; 
+  cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm);}
+.btn:active { transform: translateY(0); }
+.btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.btn.ghost:hover { background: var(--surface-2); color: var(--ink); }
+.btn.danger { background: var(--bad); }
+.btn.danger:hover { background: #b91c1c; }
+.btn.sm { padding: 8px 16px; font-size: 14px; border-radius: 8px; }
+
+.abtn { 
+  background: var(--surface); border: 1px solid var(--line); color: var(--muted); 
+  width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 18px; 
+  display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: var(--shadow-sm);
+}
+.abtn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px);}
+
+.iconbtn { 
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--muted); 
+  width: 40px; height: 40px; min-width: 40px; border-radius: 10px; cursor: pointer; 
+  font-size: 18px; display: flex; align-items: center; justify-content: center; flex: none; transition: all 0.2s;
+}
+.iconbtn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft);}
+
+.rowbtns { display: flex; gap: 12px; justify-content: space-between; margin-top: 24px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--surface-2);}
+
+/* Login Gate */
+.gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.gate .box { 
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); 
+  padding: 40px 32px; width: 100%; max-width: 380px; text-align: center; box-shadow: var(--shadow-lg);
+}
+.gate input { margin: 12px 0; text-align: right; padding: 12px; }
+
+.hide { display: none !important; }
+.err { color: var(--bad); font-size: 13.5px; font-weight: 500; min-height: 20px; margin-top: 10px; }
+
+@media(max-width: 768px) {
+  .appbar-in { padding: 0 16px; gap: 12px; }
+  .nav { margin-right: 0;}
+  .nav button { padding: 0 12px; }
+  .brand span { display: none; }
+  .wrap { padding: 16px 12px 80px; }
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .edit { grid-template-columns: 1fr; gap: 12px; }
+  .card { padding: 20px; }
+}
 </style>
 </head>
 <body>
 <div class="gate" id="gate">
   <div class="box">
-    <div style="font-size:32px">🔐</div>
-    <h2 style="margin:6px 0 2px">תיק לקוחות</h2>
-    <div class="sub">התחברות</div>
+    <div style="font-size:40px; margin-bottom: 10px;">🔐</div>
+    <h2 style="margin:0 0 4px; font-weight: 700;">תיק לקוחות</h2>
+    <div class="sub" style="margin-bottom: 24px;">התחברות למערכת ביטוח משכנתא</div>
     <input id="loginEmail" type="email" placeholder="אימייל" autocomplete="username">
     <input id="loginPw" type="password" placeholder="סיסמה" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn" style="width:100%;margin-top:6px" onclick="doLogin()">כניסה</button>
+    <button class="btn" style="width:100%; margin-top:16px; padding: 12px;" onclick="doLogin()">כניסה</button>
     <div class="err" id="loginErr"></div>
   </div>
 </div>
@@ -148,6 +354,7 @@ input,select,textarea{width:100%;background:var(--surface-2);border:1px solid va
 <div class="ovl" id="ovl" onclick="if(event.target===this)closeCard()"><div class="card" id="cardBody"></div></div>
 
 <script>
+// --- הפונקציונליות נשארה זהה לחלוטין ---
 const SB_URL="https://ktcabahjyjmtfavlsdks.supabase.co";
 const SB_KEY="sb_publishable_jYj0az-JCWUc3ga1fRYcew_La1y7qVw";
 const STATUSES=["ממתין לשליחת ליד","הצעה בתהליך - ליברה","הצעה בתהליך - ישיר","הצעה בתהליך - שוירץ","נסגר בליברה","נסגר בישיר","נסגר בשוירץ","ביטל סגירה","לזיהוי מהקלטות","לא רלוונטי","לא ידוע","נסגר"];
@@ -272,7 +479,7 @@ function render(){
   document.getElementById("count").textContent=`${a.length} לקוחות`;
   const head=`<thead><tr>${COLS.map(col=>`<th class="${col.k===sortKey?'active':''}" onclick="sortBy('${col.k}')">${col.l}<span class="ar">${col.k===sortKey?(sortDir>0?'▲':'▼'):'↕'}</span></th>`).join("")}</tr></thead>`;
   const body=a.length?`<tbody>${a.map(c=>`<tr onclick="openCard('${c.id}')">${COLS.map(col=>`<td>${cell(c,col.k)}</td>`).join("")}</tr>`).join("")}</tbody>`
-    :`<tbody><tr><td colspan="${COLS.length}"><div class="empty">אין תוצאות</div></td></tr></tbody>`;
+    :`<tbody><tr><td colspan="${COLS.length}"><div class="empty">אין תוצאות מתאימות לחיפוש</div></td></tr></tbody>`;
   document.getElementById("tbl").innerHTML=head+body;
 }
 function renderOverview(){
@@ -281,11 +488,11 @@ function renderOverview(){
   const byChan=chans.map(s=>[s,CLIENTS.filter(c=>chan(c).includes(s)).length]).sort((a,b)=>b[1]-a[1]);
   const byRef=[...new Set(CLIENTS.map(c=>c.referral_source).filter(Boolean))].map(s=>[s,CLIENTS.filter(c=>c.referral_source===s).length]).sort((a,b)=>b[1]-a[1]);
   const mx=arr=>Math.max(1,...arr.map(x=>x[1]));
-  const bars=(arr,cls)=>{const m=mx(arr);return arr.map(([l,n])=>`<div class="brow"><span class="lbl">${esc(l)}</span><span class="bar"><span style="width:${Math.round(n/m*100)}%${cls?';background:'+cls:''}"></span></span><span class="v">${n}</span></div>`).join("")||`<div style="color:var(--muted);font-size:13px">אין נתונים</div>`;}
+  const bars=(arr,cls)=>{const m=mx(arr);return arr.map(([l,n])=>`<div class="brow"><span class="lbl">${esc(l)}</span><span class="bar"><span style="width:${Math.round(n/m*100)}%${cls?';background:'+cls:''}"></span></span><span class="v">${n}</span></div>`).join("")||`<div style="color:var(--muted);font-size:14px; padding: 10px 0;">אין נתונים זמינים</div>`;}
   document.getElementById("brk").innerHTML=`
-    <div class="box"><h3>לפי סטטוס</h3>${bars(byStatus)}</div>
-    <div class="box"><h3>לפי ערוץ (ליד הועבר ל)</h3>${bars(byChan)}</div>
-    <div class="box"><h3>לפי גורם מפנה</h3>${bars(byRef)}</div>`;
+    <div class="box"><h3>חלוקה לפי סטטוס</h3>${bars(byStatus)}</div>
+    <div class="box"><h3>חלוקה לפי ערוץ (ליד הועבר ל)</h3>${bars(byChan)}</div>
+    <div class="box"><h3>חלוקה לפי גורם מפנה</h3>${bars(byRef)}</div>`;
 }
 function fld(k,v){return v?`<div class="field"><span class="k">${k}</span><span class="v">${v}</span></div>`:"";}
 let _cardId=null;
@@ -295,12 +502,14 @@ function renderCard(editing){
   const b=document.getElementById("cardBody");
   if(!editing){
     b.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-        <div><h2 style="margin:0">${esc(c.name)}</h2>
-          <div style="margin-top:6px"><span class="pill ${pillClass(c.status)}">${esc(c.status)}</span></div></div>
-        <button class="iconbtn" onclick="renderCard(true)" title="עריכה" aria-label="עריכה">✎</button>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px; margin-bottom: 20px;">
+        <div>
+          <h2 style="margin:0; border:none; padding:0;">${esc(c.name)}</h2>
+          <div style="margin-top:8px"><span class="pill ${pillClass(c.status)}">${esc(c.status)}</span></div>
+        </div>
+        <button class="iconbtn" onclick="renderCard(true)" title="עריכת פרטים" aria-label="עריכה">✎</button>
       </div>
-      <div style="margin-top:12px">
+      <div>
         ${fld("טלפון",c.phone?'<span class="mono">'+fmtPhone(c.phone)+'</span>':"")}
         ${fld("ת.ז.",esc(c.id_number))}
         ${fld("סכום משכנתא",c.mortgage?('<span class=mono>'+esc(c.mortgage)+' ₪</span>'):"")}
@@ -312,24 +521,31 @@ function renderCard(editing){
         ${fld("נסגר פעמיים",c.closed_twice?"כן":"")}
         ${fld("סטטוס ליד בישיר",esc(c.yashir_status))}${fld("סטטוס במייל",esc(c.email_status))}
         ${fld("מס' שיחות מוקלטות",c.call_count||"")}
-        ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:13px;color:var(--muted);padding:6px 0;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
+        ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:14px;color:var(--muted);padding:10px 14px;background:var(--surface-2);border-radius:8px;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
         ${fld("הערות",esc(c.notes))}
       </div>
       <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button></div>`;
   } else {
     b.innerHTML=`
-      <h2 style="margin:0 0 12px">עריכת לקוח</h2>
+      <h2>עריכת פרטי לקוח</h2>
       <div class="edit">
-        ${EDITABLE.map(([f,l])=>f==="notes"?`<label>${l}</label><textarea id="ed_${f}" rows="2">${esc(c[f])}</textarea>`:`<label>${l}</label><input id="ed_${f}" value="${esc(f==="phone"?fmtPhone(c[f]):c[f])}">`).join("")}
-        <label>ליד הועבר ל:</label>
-        <div style="display:flex;gap:14px;padding:4px 0">${CHANS.map((ch,i)=>`<label style="font-size:14px;color:var(--ink)"><input type="checkbox" id="ch${i}" style="width:auto" ${chan(c).includes(ch)?"checked":""}> ${ch}</label>`).join("")}</div>
-        <label>סטטוס</label><select id="ed_status">${STATUSES.map(s=>`<option ${s===c.status?"selected":""}>${s}</option>`).join("")}</select>
-        <label>תשלום שהתקבל (₪)</label>
-        <div style="display:flex;gap:6px"><input id="ed_paid_to_avi" value="${esc(c.paid_to_avi)}" style="flex:1"><button class="btn ghost" type="button" onclick="calcPay()">חשב לפי הערוץ</button></div>
+        ${EDITABLE.map(([f,l])=>`<div><label>${l}</label>${f==="notes"?`<textarea id="ed_${f}">${esc(c[f])}</textarea>`:`<input id="ed_${f}" value="${esc(f==="phone"?fmtPhone(c[f]):c[f])}">`}</div>`).join("")}
+        <div style="grid-column: 1 / -1;">
+          <label>ליד הועבר ל:</label>
+          <div style="display:flex;gap:20px;padding:8px 0;flex-wrap:wrap;">${CHANS.map((ch,i)=>`<label style="font-size:15px;color:var(--ink);display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="ch${i}" style="width:18px;height:18px;" ${chan(c).includes(ch)?"checked":""}> ${ch}</label>`).join("")}</div>
+        </div>
+        <div>
+          <label>סטטוס הלקוח</label>
+          <select id="ed_status">${STATUSES.map(s=>`<option ${s===c.status?"selected":""}>${s}</option>`).join("")}</select>
+        </div>
+        <div>
+          <label>תשלום שהתקבל (₪)</label>
+          <div style="display:flex;gap:8px"><input id="ed_paid_to_avi" value="${esc(c.paid_to_avi)}" style="flex:1"><button class="btn ghost" type="button" onclick="calcPay()">חישוב אוטומטי</button></div>
+        </div>
       </div>
       <div class="rowbtns">
-        <button class="btn danger" onclick="delClient('${c.id}')">מחק</button>
-        <div style="display:flex;gap:8px"><button class="btn ghost" onclick="renderCard(false)">ביטול</button><button class="btn" onclick="saveClient('${c.id}')">שמור</button></div>
+        <button class="btn danger" onclick="delClient('${c.id}')">מחק לקוח</button>
+        <div style="display:flex;gap:12px"><button class="btn ghost" onclick="renderCard(false)">ביטול</button><button class="btn" onclick="saveClient('${c.id}')">שמור שינויים</button></div>
       </div>`;
   }
 }
@@ -349,7 +565,7 @@ function calcPay(){
   else if(s.includes("ליברה")) amt=prem>=20?300:prem>=15?200:(prem>0?100:0);
   else if(s.includes("שוירץ")) amt=prem?(prem>=75?4:3)*prem:0;
   if(amt) document.getElementById("ed_paid_to_avi").value=amt;
-  else alert("בחר סטטוס 'נסגר ב[ערוץ]' והזן משכנתא/פרמיה");
+  else alert("יש לבחור סטטוס 'נסגר ב[ערוץ]' ולהזין נתוני משכנתא/פרמיה קודם לכן.");
 }
 async function saveClient(id){
   const o=collectEdit();
@@ -358,7 +574,7 @@ async function saveClient(id){
   await loadClients();renderCard(false);
 }
 async function delClient(id){
-  if(!confirm("למחוק את הלקוח לצמיתות?"))return;
+  if(!confirm("האם אתה בטוח שברצונך למחוק את הלקוח לצמיתות?"))return;
   const r=await api("/rest/v1/clients?id=eq."+id,{method:"DELETE",headers:{"Prefer":"return=minimal"}});
   if(!r.ok){alert("מחיקה נכשלה");return;}
   closeCard();await loadClients();
@@ -367,41 +583,41 @@ function openAdd(){
   document.getElementById("cardBody").innerHTML=`
     <h2>לקוח חדש</h2>
     <div class="edit">
-      <label>שם</label><input id="ad_name">
-      <label>טלפון</label><input id="ad_phone">
-      <label>ת.ז.</label><input id="ad_id_number">
-      <label>סכום משכנתא</label><input id="ad_mortgage">
-      <label>פרמיה חודשית</label><input id="ad_premium">
-      <label>ערוצים (מופרד בפסיק)</label><input id="ad_channels" placeholder="ליברה, ישיר, שוירץ">
-      <label>סטטוס</label><select id="ad_status">${STATUSES.map(s=>`<option ${s==="ממתין לשליחת ליד"?"selected":""}>${s}</option>`).join("")}</select>
-      <label>הערות</label><textarea id="ad_notes" rows="2"></textarea>
+      <div><label>שם הלקוח</label><input id="ad_name"></div>
+      <div><label>טלפון</label><input id="ad_phone"></div>
+      <div><label>ת.ז.</label><input id="ad_id_number"></div>
+      <div><label>סכום משכנתא</label><input id="ad_mortgage"></div>
+      <div><label>פרמיה חודשית</label><input id="ad_premium"></div>
+      <div><label>ערוצים (מופרד בפסיק)</label><input id="ad_channels" placeholder="ליברה, ישיר, שוירץ"></div>
+      <div><label>סטטוס</label><select id="ad_status">${STATUSES.map(s=>`<option ${s==="ממתין לשליחת ליד"?"selected":""}>${s}</option>`).join("")}</select></div>
+      <div><label>הערות</label><textarea id="ad_notes"></textarea></div>
     </div>
-    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">ביטול</button><button class="btn" onclick="addClient()">הוסף</button></div>`;
+    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">ביטול</button><button class="btn" onclick="addClient()">הוסף לקוח</button></div>`;
   document.getElementById("ovl").classList.add("on");
 }
 async function addClient(){
   const o={name:val("ad_name"),phone:val("ad_phone").replace(/\D/g,"").replace(/^972/,"").replace(/^0/,""),id_number:val("ad_id_number"),mortgage:val("ad_mortgage"),premium:val("ad_premium"),channels:val("ad_channels"),status:val("ad_status"),notes:val("ad_notes")};
   o.closed=(o.status||"").startsWith("נסגר");
-  if(!o.name){alert("צריך שם");return;}
+  if(!o.name){alert("חובה להזין שם לקוח");return;}
   const r=await api("/rest/v1/clients",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(o)});
   if(!r.ok){alert("הוספה נכשלה");return;}
   closeCard();await loadClients();
 }
 function openSettings(){
   document.getElementById("cardBody").innerHTML=`
-    <h2>הגדרות</h2>
-    <div class="field"><span class="k">מחובר כ־</span><span class="v mono">${esc(session&&session.email)}</span></div>
+    <h2>הגדרות חשבון</h2>
+    <div class="field" style="background:var(--surface-2); padding: 16px; border-radius: 8px;"><span class="k">מחובר כ־</span><span class="v mono">${esc(session&&session.email)}</span></div>
     <div class="edit">
-      <label>שינוי סיסמה — סיסמה חדשה</label><input id="newpw" type="password">
+      <div><label>שינוי סיסמה — הזן סיסמה חדשה</label><input id="newpw" type="password" placeholder="לפחות 6 תווים"></div>
     </div>
     <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="changePw()">עדכן סיסמה</button></div>`;
   document.getElementById("ovl").classList.add("on");
 }
 async function changePw(){
-  const pw=val("newpw");if(pw.length<6){alert("סיסמה קצרה מדי (לפחות 6)");return;}
+  const pw=val("newpw");if(pw.length<6){alert("הסיסמה קצרה מדי (יש להזין לפחות 6 תווים)");return;}
   const r=await api("/auth/v1/user",{method:"PUT",body:JSON.stringify({password:pw})});
   if(!r.ok){alert("שינוי סיסמה נכשל");return;}
-  alert("הסיסמה עודכנה");closeCard();
+  alert("הסיסמה עודכנה בהצלחה!");closeCard();
 }
 function closeCard(){document.getElementById("ovl").classList.remove("on");}
 function toggleTheme(){const r=document.documentElement,cur=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.setAttribute("data-theme",cur==="dark"?"light":"dark");}
@@ -412,19 +628,19 @@ const num=id=>parseInt((val(id)||'').replace(/\D/g,''))||0;
 let _lead=null;
 function openLead(){
   document.getElementById('cardBody').innerHTML=`
-    <h2>💡 ליד חדש + המלצה</h2>
+    <h2>💡 קליטת ליד חדש + מנוע המלצות</h2>
     <div class="edit">
-      <label>שם הלקוח</label><input id="ld_name">
-      <label>טלפון</label><input id="ld_phone">
-      <label>ת.ז. (לישיר)</label><input id="ld_id">
-      <label>סכום משכנתא (₪)</label><input id="ld_mort" inputmode="numeric">
-      <label>סוג</label><select id="ld_type"><option>חדש</option><option>הסבה</option></select>
-      <label>פרמיה חודשית נוכחית לביטוח חיים (₪, אם ידוע)</label><input id="ld_prem" inputmode="numeric">
-      <label>גיל (אם ידוע)</label><input id="ld_age" inputmode="numeric">
-      <label>ערך כינון למבנה (₪, אופציונלי)</label><input id="ld_val" inputmode="numeric">
+      <div><label>שם הלקוח</label><input id="ld_name"></div>
+      <div><label>טלפון</label><input id="ld_phone"></div>
+      <div><label>ת.ז. (עבור ביטוח ישיר)</label><input id="ld_id"></div>
+      <div><label>סכום משכנתא (₪)</label><input id="ld_mort" inputmode="numeric"></div>
+      <div><label>סוג פניה</label><select id="ld_type"><option>חדש</option><option>הסבה</option></select></div>
+      <div><label>פרמיה חודשית נוכחית (₪, אם ידוע)</label><input id="ld_prem" inputmode="numeric"></div>
+      <div><label>גיל הלקוח (אם ידוע)</label><input id="ld_age" inputmode="numeric"></div>
+      <div><label>ערך כינון למבנה (₪, אופציונלי)</label><input id="ld_val" inputmode="numeric"></div>
     </div>
     <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="computeRec()">חשב המלצה</button></div>
-    <div id="recOut" style="margin-top:14px"></div>`;
+    <div id="recOut" style="margin-top:24px"></div>`;
   document.getElementById('ovl').classList.add('on');
 }
 function computeRec(){
@@ -448,25 +664,29 @@ function computeRec(){
     }
   }
   let rows='';
-  rows+=`<div class="field"><span class="k">ביטוח ישיר</span><span class="v mono">${money(yashir)} ₪ ${(isNew||mort>=2000000)?'':(mort>=1500000?'(הסבה — אישור)':'(הסבה — לא זמין)')}</span></div>`;
-  rows+=`<div class="field"><span class="k">ליברה</span><span class="v mono">${money(libra)} ₪ ${prem?'':'(משוער ≥20)'}</span></div>`;
-  rows+=`<div class="field"><span class="k">שוירץ</span><span class="v mono">${schwartz?money(schwartz)+' ₪':'הזן פרמיה'}</span></div>`;
-  if(bMonthly) rows+=`<div class="field"><span class="k">פרמיית מבנה (שוירץ)</span><span class="v mono">~${bMonthly} ₪/חודש</span></div>`;
+  rows+=`<div class="field"><span class="k">ביטוח ישיר</span><span class="v mono">${money(yashir)} ₪ ${(isNew||mort>=2000000)?'':(mort>=1500000?'<span class="tag">הסבה — אישור</span>':'<span class="tag bad">הסבה — לא זמין</span>')}</span></div>`;
+  rows+=`<div class="field"><span class="k">ליברה</span><span class="v mono">${money(libra)} ₪ ${prem?'':'<span class="tag">משוער ≥20</span>'}</span></div>`;
+  rows+=`<div class="field"><span class="k">שוירץ</span><span class="v mono">${schwartz?money(schwartz)+' ₪':'<span class="tag">הזן פרמיה</span>'}</span></div>`;
+  if(bMonthly) rows+=`<div class="field"><span class="k">פרמיית מבנה (שוירץ)</span><span class="v mono">~${bMonthly} ₪ לחודש</span></div>`;
   const libraDraft=`אל: danielp@lbr.co.il\nנושא: ${name}\n\n${phone?'0'+phone:''} ${isNew?'משכנתא חדשה על סך':'ייתרה'} ${money(mort)}`;
   const yashirDoc=`שם: ${name}\nת.ז.: ${idn}\nטלפון: ${phone?'0'+phone:''}\nסכום משכנתא: ${money(mort)} ₪`;
   _lead={name,phone,idn,mort,chans:chans.join(", ")};
   document.getElementById('recOut').innerHTML=`
-    <div style="background:var(--accent-soft);border-radius:10px;padding:12px;margin-bottom:10px">
-      <div style="font-weight:700;color:var(--accent);font-size:16px">➡ ${esc(rec)}</div>
-      <div style="font-size:13px;margin-top:5px">${esc(why)}</div>
+    <div style="background:var(--accent-soft);border: 1px solid var(--accent); border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="font-weight:700;color:var(--accent-hover);font-size:18px; margin-bottom: 6px;">➡ ${esc(rec)}</div>
+      <div style="font-size:14px;color:var(--ink);">${esc(why)}</div>
     </div>
-    ${rows}
-    <label style="margin-top:10px">טיוטת מייל לליברה (לחץ להעתקה)</label><textarea rows="4" onclick="this.select()">${esc(libraDraft)}</textarea>
-    <label>מסמך לישיר (לחץ להעתקה)</label><textarea rows="4" onclick="this.select()">${esc(yashirDoc)}</textarea>
-    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="saveLead()">שמור כלקוח</button></div>`;
+    <div style="background: var(--surface-2); border-radius: 12px; padding: 0 16px;">
+      ${rows}
+    </div>
+    <div class="edit" style="margin-top: 20px;">
+      <div><label>טיוטת מייל לליברה (לחיצה להעתקה)</label><textarea onclick="this.select()" readonly style="cursor:pointer; background: var(--surface-2);">${esc(libraDraft)}</textarea></div>
+      <div><label>מסמך לישיר (לחיצה להעתקה)</label><textarea onclick="this.select()" readonly style="cursor:pointer; background: var(--surface-2);">${esc(yashirDoc)}</textarea></div>
+    </div>
+    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="saveLead()">שמור כלקוח במערכת</button></div>`;
 }
 async function saveLead(){
-  if(!_lead||!_lead.name){alert('צריך שם');return;}
+  if(!_lead||!_lead.name){alert('חובה להזין שם לקוח');return;}
   const o={name:_lead.name,phone:_lead.phone||null,id_number:_lead.idn||null,
     mortgage:_lead.mort?String(_lead.mort):null,status:'ממתין לשליחת ליד',channels:_lead.chans,notes:'ליד חדש (ממנוע ההמלצה)'};
   const r=await api('/rest/v1/clients',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(o)});
@@ -474,7 +694,7 @@ async function saveLead(){
   closeCard();await loadClients();
 }
 
-// ---- Document generator (receipt / Libra payment-demand) ----
+// ---- Document generator ----
 const BIZ={name:"A.M.F",patur:"204231658",tel:"0548442552",email:"avi8442552@gmail.com"};
 const CO={"ליברה":'ליברה חברה לביטוח בע"מ',"ביטוח ישיר":'איי.די.איי חברה לביטוח בע"מ'};
 let _docItems=[];
@@ -482,61 +702,64 @@ function openDoc(){ _docItems=[{name:"",amt:""}]; renderDoc(); document.getEleme
 function renderDoc(){
   const type=(window._docType||'קבלה');
   document.getElementById('cardBody').innerHTML=`
-    <h2>📄 הפקת מסמך</h2>
+    <h2>📄 הפקת מסמכים</h2>
     <div class="edit">
-      <label>סוג מסמך</label>
+      <div style="grid-column: 1 / -1;"><label>סוג מסמך</label>
       <select id="dc_type" onchange="window._docType=this.value;renderDoc()">
         <option ${type==='קבלה'?'selected':''}>קבלה</option>
-        <option ${type==='דרישת תשלום'?'selected':''}>דרישת תשלום (ליברה)</option>
-      </select>
+        <option ${type==='דרישת תשלום'?'selected':''}>דרישת תשלום (חשבון עסקה - ליברה)</option>
+      </select></div>
       ${type==='קבלה'?`
-        <label>עבור (חברה)</label><select id="dc_co"><option>ליברה</option><option>ביטוח ישיר</option></select>
-        <label>תאריך</label><input id="dc_date" value="${new Date().toLocaleDateString('he-IL')}">
-        <label>סכום (₪)</label><input id="dc_amt" inputmode="numeric">
-        <label>הערה (עבור...)</label><input id="dc_note" value="ספק לידים ביטוח משכנתא">
+        <div><label>עבור חברה</label><select id="dc_co"><option>ליברה</option><option>ביטוח ישיר</option></select></div>
+        <div><label>תאריך</label><input id="dc_date" value="${new Date().toLocaleDateString('he-IL')}"></div>
+        <div><label>סכום (₪)</label><input id="dc_amt" inputmode="numeric"></div>
+        <div><label>הערה / עבור...</label><input id="dc_note" value="ספק לידים ביטוח משכנתא"></div>
       `:`
-        <label>שורות (שם + תיאור + סכום). "קיזוז על X" = 0</label>
-        <div id="dc_items"></div>
-        <button class="btn ghost" onclick="addDocItem()">+ שורה</button>
+        <div style="grid-column: 1 / -1;">
+          <label>פירוט שורות (שם, תיאור, סכום)</label>
+          <div id="dc_items" style="display:flex; flex-direction:column; gap:8px;"></div>
+          <button class="btn ghost sm" style="margin-top:12px" onclick="addDocItem()">+ הוסף שורה</button>
+        </div>
       `}
     </div>
-    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="genDoc()">הפק</button></div>
-    <div id="docPrev" style="margin-top:12px"></div>`;
+    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="genDoc()">הצג טיוטה</button></div>
+    <div id="docPrev" style="margin-top:24px"></div>`;
   if(type!=='קבלה') renderItems();
 }
 function renderItems(){
   const el=document.getElementById('dc_items'); if(!el)return;
-  el.innerHTML=_docItems.map((it,i)=>`<div style="display:flex;gap:6px;margin-bottom:5px">
-    <input placeholder="שם" value="${esc(it.name)}" oninput="_docItems[${i}].name=this.value" style="flex:2">
-    <input placeholder="תיאור" value="${esc(it.desc||'')}" oninput="_docItems[${i}].desc=this.value" style="flex:2">
+  el.innerHTML=_docItems.map((it,i)=>`<div style="display:flex;gap:12px; align-items:center;">
+    <input placeholder="שם הלקוח" value="${esc(it.name)}" oninput="_docItems[${i}].name=this.value" style="flex:2">
+    <input placeholder="תיאור (למשל: קיזוז)" value="${esc(it.desc||'')}" oninput="_docItems[${i}].desc=this.value" style="flex:2">
     <input placeholder="₪" inputmode="numeric" value="${esc(it.amt)}" oninput="_docItems[${i}].amt=this.value" style="flex:1"></div>`).join('');
 }
 function addDocItem(){_docItems.push({name:"",amt:""});renderItems();}
 function genDoc(){
   const type=(window._docType||'קבלה');
-  const hdr=`מאת: ${BIZ.name} · עוסק פטור ${BIZ.patur} · טל' ${BIZ.tel} · ${BIZ.email}`;
+  const hdr=`מאת: ${BIZ.name} &middot; עוסק פטור ${BIZ.patur} &middot; טל' ${BIZ.tel} &middot; ${BIZ.email}`;
   let html;
   if(type==='קבלה'){
     const co=CO[val('dc_co')], date=val('dc_date'), amt=num('dc_amt'), note=val('dc_note');
     html=`<div class="doc"><h3>קבלה (מקור)</h3><div class="hdr">${hdr}<br>עבור: ${co}</div>
-      <table><tr><th>אמצעי תשלום</th><th>תאריך</th><th>סכום</th></tr>
+      <table><tr><th>אמצעי תשלום</th><th>תאריך הפקה</th><th>סכום</th></tr>
       <tr><td>העברה בנקאית</td><td>${esc(date)}</td><td>₪ ${money(amt)}</td></tr></table>
-      <div class="tot">סה"כ: ₪ ${money(amt)}</div><div style="margin-top:6px">הערות: עבור ${esc(note)}</div></div>`;
+      <div class="tot">סה"כ לתשלום: ₪ ${money(amt)}</div><div style="margin-top:12px; font-size:14px; color:#444;">הערות: עבור ${esc(note)}</div></div>`;
   } else {
     let total=0, rows='';
     _docItems.forEach(it=>{const a=parseInt((it.amt||'').replace(/\D/g,''))||0;total+=a;
       rows+=`<tr><td>${esc(it.name)}</td><td>${esc(it.desc||'')}</td><td>₪ ${money(a)}</td></tr>`;});
     html=`<div class="doc"><h3>חשבון עסקה (מקור)</h3><div class="hdr">${hdr}<br>עבור: ליברה חברה לביטוח בע"מ</div>
-      <table><tr><th>שם</th><th>תיאור</th><th>סכום</th></tr>${rows}</table>
-      <div class="tot">סה"כ פטור ממע"מ: ₪ ${money(total)} &nbsp;·&nbsp; סה"כ לתשלום: ₪ ${money(total)}</div></div>`;
+      <table><tr><th>שם הלקוח</th><th>תיאור / הערה</th><th>סכום</th></tr>${rows}</table>
+      <div class="tot">סה"כ פטור ממע"מ: ₪ ${money(total)}<br>סה"כ לתשלום: ₪ ${money(total)}</div></div>`;
   }
   window._docHtml=html;
-  document.getElementById('docPrev').innerHTML=`<div style="border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff;color:#111">${html}</div>
-    <div class="rowbtns"><button class="btn" onclick="printDoc()">🖨 הדפס / שמור PDF</button></div>`;
+  document.getElementById('docPrev').innerHTML=`
+    <div style="border:1px solid var(--line); border-radius:12px; padding:24px; background:#fff; color:#111; box-shadow: var(--shadow-sm);">${html}</div>
+    <div class="rowbtns"><button class="btn" style="width: 100%;" onclick="printDoc()">🖨 הדפס מסמך / שמור כ-PDF</button></div>`;
 }
 function printDoc(){
   const w=window.open('','_blank');
-  w.document.write('<html dir="rtl" lang="he"><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;color:#111;padding:24px}.doc{max-width:620px;margin:0 auto}.doc h3{text-align:center}.doc .hdr{font-size:12px;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;line-height:1.7}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #888;padding:6px;text-align:right}.tot{font-weight:700;margin-top:10px;text-align:left}</style></head><body>'+window._docHtml+'</body></html>');
+  w.document.write('<html dir="rtl" lang="he"><head><meta charset="utf-8"><title>מסמך</title><style>body{font-family: system-ui, -apple-system, Arial, sans-serif; color: #000; padding: 40px; margin: 0;}.doc{max-width: 700px; margin: 0 auto;}.doc h3{text-align: center; font-size: 24px; margin-bottom: 24px;}.doc .hdr{font-size: 15px; border-bottom: 2px solid #000; padding-bottom: 16px; margin-bottom: 24px; line-height: 1.8;}table{width: 100%; border-collapse: collapse; font-size: 15px; margin-bottom: 24px;}th{background: #f4f4f4;}th, td{border: 1px solid #000; padding: 12px; text-align: right;}.tot{font-weight: bold; font-size: 18px; line-height: 1.6; margin-top: 16px; text-align: left;}</style></head><body>'+window._docHtml+'</body></html>');
   w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 
