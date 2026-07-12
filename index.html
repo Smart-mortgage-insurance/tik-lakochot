@@ -102,9 +102,10 @@ input,select,textarea{width:100%;background:var(--surface-2);border:1px solid va
 <script>
 const SB_URL="https://ktcabahjyjmtfavlsdks.supabase.co";
 const SB_KEY="sb_publishable_jYj0az-JCWUc3ga1fRYcew_La1y7qVw";
-const STATUSES=["נסגר","הצעה - בתהליך","עבר לישיר - לא סגר","ביטל סגירה","לזיהוי מהקלטות","לא רלוונטי","לא ידוע"];
-const EDITABLE=[["name","שם"],["phone","טלפון"],["id_number","ת.ז."],["mortgage","סכום משכנתא"],["premium","פרמיה חודשית"],["channels","ערוצים (מופרד בפסיק)"],["commission_to_client","עמלה ללקוח"],["paid_to_avi","תשלום שהתקבל"],["referral_source","מקור הפניה"],["notes","הערות"]];
-const pillClass=s=>s==="נסגר"?"ok":(s==="עבר לישיר - לא סגר"||s==="הצעה - בתהליך")?"warn":s==="ביטל סגירה"?"bad":"neut";
+const STATUSES=["נסגר בישיר","נסגר בליברה","נסגר בשוירץ","הצעה - בתהליך","עבר לישיר - לא סגר","ביטל סגירה","לזיהוי מהקלטות","לא רלוונטי","לא ידוע","נסגר"];
+const CHANS=["ישיר","ליברה","שוירץ"];
+const EDITABLE=[["name","שם"],["phone","טלפון"],["id_number","ת.ז."],["mortgage","סכום משכנתא"],["premium","פרמיה חודשית"],["commission_to_client","עמלה ללקוח"],["referral_source","מקור הפניה"],["notes","הערות"]];
+const pillClass=s=>(s||"").startsWith("נסגר")?"ok":(s==="עבר לישיר - לא סגר"||s==="הצעה - בתהליך")?"warn":s==="ביטל סגירה"?"bad":"neut";
 const fmtPhone=p=>{p=(p||"").replace(/\D/g,"");return p.length===9?"0"+p:p;};
 const esc=s=>(s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const val=id=>document.getElementById(id).value;
@@ -165,7 +166,7 @@ function buildChips(){
 function setStatus(s){fStatus=s;buildChips();render();}
 function setChannel(s){fChannel=s;buildChips();render();}
 function tiles(){
-  const a=CLIENTS,closed=a.filter(c=>c.closed||c.status==="נסגר").length,moved=a.filter(c=>c.status==="עבר לישיר - לא סגר").length,comm=a.filter(c=>c.commission_to_client).length,twice=a.filter(c=>c.closed_twice).length;
+  const a=CLIENTS,closed=a.filter(c=>c.closed||(c.status||"").startsWith("נסגר")).length,moved=a.filter(c=>c.status==="עבר לישיר - לא סגר").length,comm=a.filter(c=>c.commission_to_client).length,twice=a.filter(c=>c.closed_twice).length;
   const T=[["acc",a.length,"סה״כ לקוחות"],["ok",closed,"נסגרו"],["warn",moved,"עברו לישיר · לא סגרו"],["",twice,"נסגרו פעמיים"],["",comm,"עם עמלה"]];
   document.getElementById("tiles").innerHTML=T.map(([c,n,l])=>`<div class="tile ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
 }
@@ -202,8 +203,12 @@ function openCard(id){
     ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:13px;color:var(--muted);padding:6px 0;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
     ${fld("הערות",esc(c.notes))}
     <div class="edit">
-      ${EDITABLE.map(([f,l])=>f==="notes"?`<label>${l}</label><textarea id="ed_${f}" rows="2">${esc(f==="phone"?fmtPhone(c[f]):c[f])}</textarea>`:`<label>${l}</label><input id="ed_${f}" value="${esc(f==="phone"?fmtPhone(c[f]):c[f])}">`).join("")}
+      ${EDITABLE.map(([f,l])=>f==="notes"?`<label>${l}</label><textarea id="ed_${f}" rows="2">${esc(c[f])}</textarea>`:`<label>${l}</label><input id="ed_${f}" value="${esc(f==="phone"?fmtPhone(c[f]):c[f])}">`).join("")}
+      <label>ליד הועבר ל:</label>
+      <div style="display:flex;gap:14px;padding:4px 0">${CHANS.map((ch,i)=>`<label style="font-size:14px;color:var(--ink)"><input type="checkbox" id="ch${i}" style="width:auto" ${chan(c).includes(ch)?"checked":""}> ${ch}</label>`).join("")}</div>
       <label>סטטוס</label><select id="ed_status">${STATUSES.map(s=>`<option ${s===c.status?"selected":""}>${s}</option>`).join("")}</select>
+      <label>תשלום שהתקבל (₪)</label>
+      <div style="display:flex;gap:6px"><input id="ed_paid_to_avi" value="${esc(c.paid_to_avi)}" style="flex:1"><button class="btn ghost" type="button" onclick="calcPay()">חשב לפי הערוץ</button></div>
     </div>
     <div class="rowbtns">
       <button class="btn danger" onclick="delClient('${c.id}')">מחק</button>
@@ -214,7 +219,20 @@ function openCard(id){
 function collectEdit(){
   const o={};EDITABLE.forEach(([f])=>{o[f]=val("ed_"+f);});
   o.phone=o.phone.replace(/\D/g,"").replace(/^972/,"").replace(/^0/,"");
-  o.status=val("ed_status");o.closed=(o.status==="נסגר");return o;
+  o.channels=CHANS.filter((ch,i)=>document.getElementById("ch"+i).checked).join(", ");
+  o.paid_to_avi=val("ed_paid_to_avi");
+  o.status=val("ed_status");o.closed=(o.status||"").startsWith("נסגר");return o;
+}
+function calcPay(){
+  const s=val("ed_status");
+  const prem=parseInt((val("ed_premium")||"").replace(/\D/g,""))||0;
+  const mort=parseInt((val("ed_mortgage")||"").replace(/\D/g,""))||0;
+  let amt=0;
+  if(s.includes("ישיר")) amt=mort>=2000000?1000:mort>=1500000?700:mort>=1200000?550:450;
+  else if(s.includes("ליברה")) amt=prem>=20?300:prem>=15?200:(prem>0?100:0);
+  else if(s.includes("שוירץ")) amt=prem?(prem>=75?4:3)*prem:0;
+  if(amt) document.getElementById("ed_paid_to_avi").value=amt;
+  else alert("בחר סטטוס 'נסגר ב[ערוץ]' והזן משכנתא/פרמיה");
 }
 async function saveClient(id){
   const o=collectEdit();
@@ -238,7 +256,7 @@ function openAdd(){
       <label>סכום משכנתא</label><input id="ad_mortgage">
       <label>פרמיה חודשית</label><input id="ad_premium">
       <label>ערוצים (מופרד בפסיק)</label><input id="ad_channels" placeholder="ליברה, ישיר, שוירץ">
-      <label>סטטוס</label><select id="ad_status">${STATUSES.map(s=>`<option>${s}</option>`).join("")}</select>
+      <label>סטטוס</label><select id="ad_status">${STATUSES.map(s=>`<option ${s==="הצעה - בתהליך"?"selected":""}>${s}</option>`).join("")}</select>
       <label>הערות</label><textarea id="ad_notes" rows="2"></textarea>
     </div>
     <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">ביטול</button><button class="btn" onclick="addClient()">הוסף</button></div>`;
@@ -246,7 +264,7 @@ function openAdd(){
 }
 async function addClient(){
   const o={name:val("ad_name"),phone:val("ad_phone").replace(/\D/g,"").replace(/^972/,"").replace(/^0/,""),id_number:val("ad_id_number"),mortgage:val("ad_mortgage"),premium:val("ad_premium"),channels:val("ad_channels"),status:val("ad_status"),notes:val("ad_notes")};
-  o.closed=(o.status==="נסגר");
+  o.closed=(o.status||"").startsWith("נסגר");
   if(!o.name){alert("צריך שם");return;}
   const r=await api("/rest/v1/clients",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(o)});
   if(!r.ok){alert("הוספה נכשלה");return;}
