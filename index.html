@@ -83,9 +83,8 @@ input,select,textarea{width:100%;background:var(--surface-2);border:1px solid va
       <div class="sync"><span class="dot" id="syncDot"></span><span id="syncTxt">טוען...</span></div>
     </div>
     <div class="hbtns">
-      <button class="btn" onclick="openLead()">💡 ליד + המלצה</button>
+      <button class="btn" onclick="openLead()">💡 ליד חדש + המלצה</button>
       <button class="chip" onclick="openDoc()">📄 מסמך</button>
-      <button class="btn" onclick="openAdd()">+ לקוח חדש</button>
       <button class="chip" onclick="openSettings()">⚙ הגדרות</button>
       <button class="chip" onclick="toggleTheme()">מצב תצוגה</button>
       <button class="chip" onclick="doLogout()">יציאה</button>
@@ -223,7 +222,7 @@ function renderCard(editing){
         ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:13px;color:var(--muted);padding:6px 0;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
         ${fld("הערות",esc(c.notes))}
       </div>
-      <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="renderCard(true)">✎ עריכה</button></div>`;
+      <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button></div>`;
   } else {
     b.innerHTML=`
       <h2 style="margin:0 0 12px">עריכת לקוח</h2>
