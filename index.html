@@ -180,6 +180,15 @@ table.data tbody tr:hover { background: var(--surface-2); }
 table.data tbody tr:last-child td { border-bottom: none; }
 td .nm { font-weight: 600; color: var(--ink); }
 .empty { padding: 60px 20px; text-align: center; color: var(--muted); font-size: 16px; font-weight: 500; }
+/* ---- client tiles grid ---- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; padding: 18px; }
+.ccard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 16px; cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .15s; display: flex; flex-direction: column; gap: 12px; min-height: 104px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+.ccard::before { content: ""; position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 4px; background: var(--neut); }
+.ccard.ok::before { background: var(--ok); } .ccard.warn::before { background: var(--warn); } .ccard.bad::before { background: var(--bad); } .ccard.neut::before { background: var(--neut); }
+.ccard:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.ccard .cn { font-weight: 700; font-size: 16.5px; line-height: 1.3; color: var(--ink); }
+.ccard .cmeta { margin-top: auto; }
+@media(max-width:768px){ .grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; } .ccard { padding: 14px; min-height: 88px; } }
 
 /* ---- breakdown (overview tab) ---- */
 .brk { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
@@ -342,9 +351,15 @@ td .nm { font-weight: 600; color: var(--ink); }
           <input id="q" placeholder="🔍 חיפוש לפי שם / טלפון / ת.ז." oninput="render()">
           <select class="flt" id="fStatus" onchange="fStatus=this.value;render()"></select>
           <select class="flt" id="fChannel" onchange="fChannel=this.value;render()"></select>
+          <select class="flt" id="fSort" onchange="sortKey=this.value;sortDir=1;render()">
+            <option value="name">מיון: שם</option>
+            <option value="status">מיון: סטטוס</option>
+            <option value="mortgage">מיון: משכנתא</option>
+            <option value="close_date">מיון: תאריך סגירה</option>
+          </select>
           <span class="count" id="count"></span>
         </div>
-        <div class="tbl-scroll"><table class="data" id="tbl"></table></div>
+        <div class="grid" id="grid"></div>
       </div>
     </div>
     <div id="tab-overview" class="hide"><div class="brk" id="brk"></div></div>
@@ -477,10 +492,12 @@ function render(){
   if(activeTab==="overview"){renderOverview();return;}
   const a=filtered();
   document.getElementById("count").textContent=`${a.length} לקוחות`;
-  const head=`<thead><tr>${COLS.map(col=>`<th class="${col.k===sortKey?'active':''}" onclick="sortBy('${col.k}')">${col.l}<span class="ar">${col.k===sortKey?(sortDir>0?'▲':'▼'):'↕'}</span></th>`).join("")}</tr></thead>`;
-  const body=a.length?`<tbody>${a.map(c=>`<tr onclick="openCard('${c.id}')">${COLS.map(col=>`<td>${cell(c,col.k)}</td>`).join("")}</tr>`).join("")}</tbody>`
-    :`<tbody><tr><td colspan="${COLS.length}"><div class="empty">אין תוצאות מתאימות לחיפוש</div></td></tr></tbody>`;
-  document.getElementById("tbl").innerHTML=head+body;
+  document.getElementById("grid").innerHTML = a.length
+    ? a.map(c=>`<div class="ccard ${pillClass(c.status)}" onclick="openCard('${c.id}')">
+        <div class="cn">${esc(c.name)}</div>
+        <div class="cmeta"><span class="pill ${pillClass(c.status)}">${esc(c.status)}</span></div>
+      </div>`).join("")
+    : `<div class="empty" style="grid-column:1/-1">אין תוצאות מתאימות לחיפוש</div>`;
 }
 function renderOverview(){
   const byStatus=STATUSES.map(s=>[s,CLIENTS.filter(c=>c.status===s).length]).filter(x=>x[1]);
@@ -495,6 +512,13 @@ function renderOverview(){
     <div class="box"><h3>חלוקה לפי גורם מפנה</h3>${bars(byRef)}</div>`;
 }
 function fld(k,v){return v?`<div class="field"><span class="k">${k}</span><span class="v">${v}</span></div>`:"";}
+const HAS=k=>CLIENTS.length?(k in CLIENTS[0]):false;
+function taskHtml(t){
+  const items=(t||"").split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!items.length)return"";
+  return '<div class="field"><span class="k">משימות</span></div><div style="padding:4px 0 8px">'+
+    items.map(x=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:14px"><span style="color:var(--accent)">☐</span><span>${esc(x)}</span></div>`).join("")+'</div>';
+}
 let _cardId=null;
 function openCard(id){ _cardId=id; renderCard(false); document.getElementById("ovl").classList.add("on"); }
 function renderCard(editing){
@@ -515,12 +539,18 @@ function renderCard(editing){
         ${fld("סכום משכנתא",c.mortgage?('<span class=mono>'+esc(c.mortgage)+' ₪</span>'):"")}
         ${fld("פרמיה חודשית",c.premium?esc(c.premium)+" ₪":"")}
         ${fld("ליד הועבר ל",chan(c).join(" · "))}
+        ${fld("תאריך העברת ליד",esc(c.lead_date))}
+        ${fld("תאריך סגירה",esc(c.close_date))}
+        ${fld("חודש סגירה",esc(c.month))}
+        ${fld("תאריך (ישיר)",esc(c.yashir_date))}
         ${fld("עמלה ללקוח",esc(c.commission_to_client))}
         ${fld("תשלום שהתקבל",c.paid_to_avi?('<span class=mono>'+esc(c.paid_to_avi)+' ₪</span>'):"")}
         ${fld("מקור הפניה",esc(c.referral_source))}
         ${fld("נסגר פעמיים",c.closed_twice?"כן":"")}
         ${fld("סטטוס ליד בישיר",esc(c.yashir_status))}
         ${fld("מס' שיחות מוקלטות",c.call_count||"")}
+        ${fld("פרטי חשבון",c.bank_details?esc(c.bank_details).replace(/\n/g,"<br>"):"")}
+        ${taskHtml(c.tasks)}
         ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:14px;color:var(--muted);padding:10px 14px;background:var(--surface-2);border-radius:8px;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
         ${fld("הערות",esc(c.notes))}
       </div>
@@ -542,6 +572,10 @@ function renderCard(editing){
           <label>תשלום שהתקבל (₪)</label>
           <div style="display:flex;gap:8px"><input id="ed_paid_to_avi" value="${esc(c.paid_to_avi)}" style="flex:1"><button class="btn ghost" type="button" onclick="calcPay()">חישוב אוטומטי</button></div>
         </div>
+        ${HAS('lead_date')?`<div><label>תאריך העברת ליד</label><input type="date" id="ed_lead_date" value="${esc(c.lead_date)}"></div>`:""}
+        ${HAS('close_date')?`<div><label>תאריך סגירה</label><input type="date" id="ed_close_date" value="${esc(c.close_date)}"></div>`:""}
+        ${HAS('tasks')?`<div style="grid-column:1/-1"><label>משימות (שורה לכל מטלה — למשל: להתקשר ל... / להעביר X ל...)</label><textarea id="ed_tasks" rows="3">${esc(c.tasks)}</textarea></div>`:""}
+        ${HAS('bank_details')?`<div style="grid-column:1/-1"><label>פרטי חשבון (בנק, סניף, מספר חשבון, שם בעל החשבון)</label><textarea id="ed_bank_details" rows="2">${esc(c.bank_details)}</textarea></div>`:""}
       </div>
       <div class="rowbtns">
         <button class="btn danger" onclick="delClient('${c.id}')">מחק לקוח</button>
@@ -554,7 +588,10 @@ function collectEdit(){
   o.phone=o.phone.replace(/\D/g,"").replace(/^972/,"").replace(/^0/,"");
   o.channels=CHANS.filter((ch,i)=>document.getElementById("ch"+i).checked).join(", ");
   o.paid_to_avi=val("ed_paid_to_avi");
-  o.status=val("ed_status");o.closed=(o.status||"").startsWith("נסגר");return o;
+  o.status=val("ed_status");o.closed=(o.status||"").startsWith("נסגר");
+  ["lead_date","close_date","tasks","bank_details"].forEach(f=>{const el=document.getElementById("ed_"+f);if(el)o[f]=el.value;});
+  if(o.closed && ("close_date" in o) && !o.close_date) o.close_date=new Date().toISOString().slice(0,10);
+  return o;
 }
 function calcPay(){
   const s=val("ed_status");
