@@ -519,7 +519,7 @@ function renderCard(editing){
         ${fld("תשלום שהתקבל",c.paid_to_avi?('<span class=mono>'+esc(c.paid_to_avi)+' ₪</span>'):"")}
         ${fld("מקור הפניה",esc(c.referral_source))}
         ${fld("נסגר פעמיים",c.closed_twice?"כן":"")}
-        ${fld("סטטוס ליד בישיר",esc(c.yashir_status))}${fld("סטטוס במייל",esc(c.email_status))}
+        ${fld("סטטוס ליד בישיר",esc(c.yashir_status))}
         ${fld("מס' שיחות מוקלטות",c.call_count||"")}
         ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:14px;color:var(--muted);padding:10px 14px;background:var(--surface-2);border-radius:8px;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
         ${fld("הערות",esc(c.notes))}
