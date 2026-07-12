@@ -81,6 +81,7 @@ input,select,textarea{width:100%;background:var(--surface-2);border:1px solid va
       <div class="sync"><span class="dot" id="syncDot"></span><span id="syncTxt">טוען...</span></div>
     </div>
     <div class="hbtns">
+      <button class="btn" onclick="openLead()">💡 ליד + המלצה</button>
       <button class="btn" onclick="openAdd()">+ לקוח חדש</button>
       <button class="chip" onclick="openSettings()">⚙ הגדרות</button>
       <button class="chip" onclick="toggleTheme()">מצב תצוגה</button>
@@ -268,6 +269,74 @@ async function changePw(){
 }
 function closeCard(){document.getElementById("ovl").classList.remove("on");}
 function toggleTheme(){const r=document.documentElement,cur=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.setAttribute("data-theme",cur==="dark"?"light":"dark");}
+
+// ---- Lead recommendation engine ----
+const money=n=>(n||0).toLocaleString('he-IL');
+const num=id=>parseInt((val(id)||'').replace(/\D/g,''))||0;
+let _lead=null;
+function openLead(){
+  document.getElementById('cardBody').innerHTML=`
+    <h2>💡 ליד חדש + המלצה</h2>
+    <div class="edit">
+      <label>שם הלקוח</label><input id="ld_name">
+      <label>טלפון</label><input id="ld_phone">
+      <label>ת.ז. (לישיר)</label><input id="ld_id">
+      <label>סכום משכנתא (₪)</label><input id="ld_mort" inputmode="numeric">
+      <label>סוג</label><select id="ld_type"><option>חדש</option><option>הסבה</option></select>
+      <label>פרמיה חודשית נוכחית לביטוח חיים (₪, אם ידוע)</label><input id="ld_prem" inputmode="numeric">
+      <label>גיל (אם ידוע)</label><input id="ld_age" inputmode="numeric">
+      <label>ערך כינון למבנה (₪, אופציונלי)</label><input id="ld_val" inputmode="numeric">
+    </div>
+    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="computeRec()">חשב המלצה</button></div>
+    <div id="recOut" style="margin-top:14px"></div>`;
+  document.getElementById('ovl').classList.add('on');
+}
+function computeRec(){
+  const name=val('ld_name'), phone=val('ld_phone').replace(/\D/g,'').replace(/^972/,'').replace(/^0/,''), idn=val('ld_id');
+  const mort=num('ld_mort'), prem=num('ld_prem'), age=num('ld_age'), kval=num('ld_val');
+  const isNew=val('ld_type')==='חדש';
+  const yashir = mort>=2000000?1000:mort>=1500000?700:mort>=1200000?550:450;
+  const libra = prem? (prem>=20?300:prem>=15?200:100) : 300;
+  const schwartz = prem? (prem>=75?4:3)*prem : 0;
+  const bMonthly = kval? Math.round(kval/1000*0.88/12) : 0;
+  let rec, why, chans=[];
+  if(isNew){
+    if(mort<=1200000){ rec="ביטוח ישיר + ליברה (במקביל)"; why="ביטוח חדש עד 1.2 מ': ישיר משלם 450, אבל ליברה לרוב זול יותר ללקוח — שלח לשניהם כדי לא לפספס (מקסימום הפרש 150 ₪)."; chans=["ישיר","ליברה"]; }
+    else { rec="ביטוח ישיר"; why="ביטוח חדש מעל 1.2 מ' — ישיר משלם הכי הרבה ("+money(yashir)+" ₪)."; chans=["ישיר"]; }
+  } else {
+    if(mort>=2000000){ rec="ביטוח ישיר"; why="הסבה מ-2 מ' ומעלה — ציון מאשר, וישיר משלם הכי הרבה ("+money(yashir)+" ₪)."; chans=["ישיר"]; }
+    else if(mort>=1500000){ rec="ביטוח ישיר — דרוש אישור מציון (אחרת ליברה)"; why="הסבה 1.5–2 מ': בקש אישור מציון בטלפון/וואטסאפ. אם לא — ליברה ("+money(libra)+" ₪)."; chans=["ישיר","ליברה"]; }
+    else {
+      if((age>=60||prem>=200) && schwartz>libra){ rec="שוירץ"; why="הסבה, לקוח מבוגר/פרמיה גבוהה — שוירץ משלם "+money(schwartz)+" ₪ (יותר מליברה "+money(libra)+")."; chans=["שוירץ"]; }
+      else { rec="ליברה"; why="הסבה מתחת ל-1.5 מ' — ישיר לא לוקח הסבות; ליברה משלם "+money(libra)+" ₪"+(schwartz?" (שוירץ: "+money(schwartz)+")":"")+"."; chans=["ליברה"]; }
+    }
+  }
+  let rows='';
+  rows+=`<div class="field"><span class="k">ביטוח ישיר</span><span class="v mono">${money(yashir)} ₪ ${(isNew||mort>=2000000)?'':(mort>=1500000?'(הסבה — אישור)':'(הסבה — לא זמין)')}</span></div>`;
+  rows+=`<div class="field"><span class="k">ליברה</span><span class="v mono">${money(libra)} ₪ ${prem?'':'(משוער ≥20)'}</span></div>`;
+  rows+=`<div class="field"><span class="k">שוירץ</span><span class="v mono">${schwartz?money(schwartz)+' ₪':'הזן פרמיה'}</span></div>`;
+  if(bMonthly) rows+=`<div class="field"><span class="k">פרמיית מבנה (שוירץ)</span><span class="v mono">~${bMonthly} ₪/חודש</span></div>`;
+  const libraDraft=`אל: danielp@lbr.co.il\nנושא: ${name}\n\n${phone?'0'+phone:''} ${isNew?'משכנתא חדשה על סך':'ייתרה'} ${money(mort)}`;
+  const yashirDoc=`שם: ${name}\nת.ז.: ${idn}\nטלפון: ${phone?'0'+phone:''}\nסכום משכנתא: ${money(mort)} ₪`;
+  _lead={name,phone,idn,mort,chans:chans.join(", ")};
+  document.getElementById('recOut').innerHTML=`
+    <div style="background:var(--accent-soft);border-radius:10px;padding:12px;margin-bottom:10px">
+      <div style="font-weight:700;color:var(--accent);font-size:16px">➡ ${esc(rec)}</div>
+      <div style="font-size:13px;margin-top:5px">${esc(why)}</div>
+    </div>
+    ${rows}
+    <label style="margin-top:10px">טיוטת מייל לליברה (לחץ להעתקה)</label><textarea rows="4" onclick="this.select()">${esc(libraDraft)}</textarea>
+    <label>מסמך לישיר (לחץ להעתקה)</label><textarea rows="4" onclick="this.select()">${esc(yashirDoc)}</textarea>
+    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="saveLead()">שמור כלקוח</button></div>`;
+}
+async function saveLead(){
+  if(!_lead||!_lead.name){alert('צריך שם');return;}
+  const o={name:_lead.name,phone:_lead.phone||null,id_number:_lead.idn||null,
+    mortgage:_lead.mort?String(_lead.mort):null,status:'הצעה - בתהליך',channels:_lead.chans,notes:'ליד חדש (ממנוע ההמלצה)'};
+  const r=await api('/rest/v1/clients',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(o)});
+  if(!r.ok){alert('שמירה נכשלה');return;}
+  closeCard();await loadClients();
+}
 
 if(session&&session.access_token){startApp();}
 else{document.getElementById("loginEmail").focus();}
