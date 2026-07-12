@@ -82,6 +82,7 @@ input,select,textarea{width:100%;background:var(--surface-2);border:1px solid va
     </div>
     <div class="hbtns">
       <button class="btn" onclick="openLead()">💡 ליד + המלצה</button>
+      <button class="chip" onclick="openDoc()">📄 מסמך</button>
       <button class="btn" onclick="openAdd()">+ לקוח חדש</button>
       <button class="chip" onclick="openSettings()">⚙ הגדרות</button>
       <button class="chip" onclick="toggleTheme()">מצב תצוגה</button>
@@ -336,6 +337,72 @@ async function saveLead(){
   const r=await api('/rest/v1/clients',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(o)});
   if(!r.ok){alert('שמירה נכשלה');return;}
   closeCard();await loadClients();
+}
+
+// ---- Document generator (receipt / Libra payment-demand) ----
+const BIZ={name:"A.M.F",patur:"204231658",tel:"0548442552",email:"avi8442552@gmail.com"};
+const CO={"ליברה":'ליברה חברה לביטוח בע"מ',"ביטוח ישיר":'איי.די.איי חברה לביטוח בע"מ'};
+let _docItems=[];
+function openDoc(){ _docItems=[{name:"",amt:""}]; renderDoc(); document.getElementById('ovl').classList.add('on'); }
+function renderDoc(){
+  const type=(window._docType||'קבלה');
+  document.getElementById('cardBody').innerHTML=`
+    <h2>📄 הפקת מסמך</h2>
+    <div class="edit">
+      <label>סוג מסמך</label>
+      <select id="dc_type" onchange="window._docType=this.value;renderDoc()">
+        <option ${type==='קבלה'?'selected':''}>קבלה</option>
+        <option ${type==='דרישת תשלום'?'selected':''}>דרישת תשלום (ליברה)</option>
+      </select>
+      ${type==='קבלה'?`
+        <label>עבור (חברה)</label><select id="dc_co"><option>ליברה</option><option>ביטוח ישיר</option></select>
+        <label>תאריך</label><input id="dc_date" value="${new Date().toLocaleDateString('he-IL')}">
+        <label>סכום (₪)</label><input id="dc_amt" inputmode="numeric">
+        <label>הערה (עבור...)</label><input id="dc_note" value="ספק לידים ביטוח משכנתא">
+      `:`
+        <label>שורות (שם + תיאור + סכום). "קיזוז על X" = 0</label>
+        <div id="dc_items"></div>
+        <button class="btn ghost" onclick="addDocItem()">+ שורה</button>
+      `}
+    </div>
+    <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="genDoc()">הפק</button></div>
+    <div id="docPrev" style="margin-top:12px"></div>`;
+  if(type!=='קבלה') renderItems();
+}
+function renderItems(){
+  const el=document.getElementById('dc_items'); if(!el)return;
+  el.innerHTML=_docItems.map((it,i)=>`<div style="display:flex;gap:6px;margin-bottom:5px">
+    <input placeholder="שם" value="${esc(it.name)}" oninput="_docItems[${i}].name=this.value" style="flex:2">
+    <input placeholder="תיאור" value="${esc(it.desc||'')}" oninput="_docItems[${i}].desc=this.value" style="flex:2">
+    <input placeholder="₪" inputmode="numeric" value="${esc(it.amt)}" oninput="_docItems[${i}].amt=this.value" style="flex:1"></div>`).join('');
+}
+function addDocItem(){_docItems.push({name:"",amt:""});renderItems();}
+function genDoc(){
+  const type=(window._docType||'קבלה');
+  const hdr=`מאת: ${BIZ.name} · עוסק פטור ${BIZ.patur} · טל' ${BIZ.tel} · ${BIZ.email}`;
+  let html;
+  if(type==='קבלה'){
+    const co=CO[val('dc_co')], date=val('dc_date'), amt=num('dc_amt'), note=val('dc_note');
+    html=`<div class="doc"><h3>קבלה (מקור)</h3><div class="hdr">${hdr}<br>עבור: ${co}</div>
+      <table><tr><th>אמצעי תשלום</th><th>תאריך</th><th>סכום</th></tr>
+      <tr><td>העברה בנקאית</td><td>${esc(date)}</td><td>₪ ${money(amt)}</td></tr></table>
+      <div class="tot">סה"כ: ₪ ${money(amt)}</div><div style="margin-top:6px">הערות: עבור ${esc(note)}</div></div>`;
+  } else {
+    let total=0, rows='';
+    _docItems.forEach(it=>{const a=parseInt((it.amt||'').replace(/\D/g,''))||0;total+=a;
+      rows+=`<tr><td>${esc(it.name)}</td><td>${esc(it.desc||'')}</td><td>₪ ${money(a)}</td></tr>`;});
+    html=`<div class="doc"><h3>חשבון עסקה (מקור)</h3><div class="hdr">${hdr}<br>עבור: ליברה חברה לביטוח בע"מ</div>
+      <table><tr><th>שם</th><th>תיאור</th><th>סכום</th></tr>${rows}</table>
+      <div class="tot">סה"כ פטור ממע"מ: ₪ ${money(total)} &nbsp;·&nbsp; סה"כ לתשלום: ₪ ${money(total)}</div></div>`;
+  }
+  window._docHtml=html;
+  document.getElementById('docPrev').innerHTML=`<div style="border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff;color:#111">${html}</div>
+    <div class="rowbtns"><button class="btn" onclick="printDoc()">🖨 הדפס / שמור PDF</button></div>`;
+}
+function printDoc(){
+  const w=window.open('','_blank');
+  w.document.write('<html dir="rtl" lang="he"><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;color:#111;padding:24px}.doc{max-width:620px;margin:0 auto}.doc h3{text-align:center}.doc .hdr{font-size:12px;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;line-height:1.7}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #888;padding:6px;text-align:right}.tot{font-weight:700;margin-top:10px;text-align:left}</style></head><body>'+window._docHtml+'</body></html>');
+  w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 
 if(session&&session.access_token){startApp();}
