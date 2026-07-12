@@ -176,7 +176,15 @@ function render(){
   tiles();const q=document.getElementById("q").value.trim();let a=CLIENTS.slice();
   if(fStatus!=="הכל")a=a.filter(c=>c.status===fStatus);
   if(fChannel!=="הכל")a=a.filter(c=>chan(c).includes(fChannel));
-  if(q)a=a.filter(c=>((c.name||"")+" "+(c.phone||"")+" "+(c.id_number||"")).includes(q));
+  if(q){
+    const norm=s=>(s||"").replace(/\D/g,"").replace(/^972/,"").replace(/^0/,"");
+    const qd=norm(q);
+    a=a.filter(c=>{
+      if((c.name||"").includes(q)) return true;
+      if(!qd) return false;
+      return norm(c.phone).includes(qd) || norm(c.id_number).includes(qd);
+    });
+  }
   document.getElementById("count").textContent=`${a.length} לקוחות`;
   document.getElementById("list").innerHTML=a.map(c=>{
     const pay=c.commission_to_client?`<span class="tag pay">עמלה: ${esc(c.commission_to_client)}</span>`:"";
