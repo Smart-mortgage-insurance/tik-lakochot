@@ -221,6 +221,18 @@ td .nm { font-weight: 600; color: var(--ink); }
 .tag.pay { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 600; }
 .mono { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: embed; font-family: monospace; font-size: 14px;}
 
+/* ---- tasks tab ---- */
+.taskadd { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.taskadd input { flex: 1; min-width: 150px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 11px 14px; color: var(--ink); font: inherit; }
+.taskadd input#tk_due { flex: 0 0 auto; min-width: 140px; }
+.tk { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; background: var(--surface); box-shadow: var(--shadow-sm); }
+.tk.done { opacity: .55; }
+.tk .cb { width: 22px; height: 22px; cursor: pointer; flex: none; margin-top: 2px; accent-color: var(--accent); }
+.tk .body { flex: 1; min-width: 0; }
+.tk .t { font-weight: 600; font-size: 15px; }
+.tk.done .t { text-decoration: line-through; }
+.tk .sub { color: var(--muted); font-size: 13px; margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
 /* ---- Overlays & Modals ---- */
 .ovl { 
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
@@ -330,8 +342,9 @@ td .nm { font-weight: 600; color: var(--ink); }
     <div class="appbar-in">
       <div class="brand"><span class="logo">🏠</span><span>תיק לקוחות</span></div>
       <nav class="nav" id="nav">
-        <button aria-selected="true" onclick="setTab('clients')">📋 לקוחות</button>
-        <button aria-selected="false" onclick="setTab('overview')">📊 סקירה</button>
+        <button data-tab="clients" aria-selected="true" onclick="setTab('clients')">📋 לקוחות</button>
+        <button data-tab="tasks" aria-selected="false" onclick="setTab('tasks')">✅ משימות</button>
+        <button data-tab="overview" aria-selected="false" onclick="setTab('overview')">📊 סקירה</button>
       </nav>
       <div class="acts">
         <div class="sync"><span class="dot" id="syncDot"></span><span id="syncTxt">טוען...</span></div>
@@ -360,6 +373,17 @@ td .nm { font-weight: 600; color: var(--ink); }
           <span class="count" id="count"></span>
         </div>
         <div class="grid" id="grid"></div>
+      </div>
+    </div>
+    <div id="tab-tasks" class="hide">
+      <div class="panel" style="padding:18px">
+        <div class="taskadd">
+          <input id="tk_text" placeholder="מה צריך לעשות? (למשל: להתקשר ל...)" onkeydown="if(event.key==='Enter')addTask()">
+          <input id="tk_client" placeholder="לקוח (אופציונלי)">
+          <input id="tk_due" type="date" title="תאריך יעד">
+          <button class="btn" onclick="addTask()">➕ הוסף</button>
+        </div>
+        <div id="taskList"></div>
       </div>
     </div>
     <div id="tab-overview" class="hide"><div class="brk" id="brk"></div></div>
@@ -421,9 +445,50 @@ async function doLogout(){try{await fetch(SB_URL+"/auth/v1/logout",{method:"POST
 async function startApp(){
   document.getElementById("gate").classList.add("hide");
   document.getElementById("app").classList.remove("hide");
-  await loadClients();
-  setInterval(()=>{if(!document.hidden)loadClients(true);},30000);
-  window.addEventListener("focus",()=>loadClients(true));
+  await loadClients(); loadTasks();
+  setInterval(()=>{if(!document.hidden){loadClients(true);loadTasks();}},30000);
+  window.addEventListener("focus",()=>{loadClients(true);loadTasks();});
+}
+let TASKS=[];
+async function loadTasks(){
+  try{
+    const r=await api("/rest/v1/tasks?select=*&order=done.asc,due_date.asc,created_at.asc&limit=1000");
+    if(r.ok){TASKS=await r.json(); if(activeTab==="tasks")renderTasks();}
+  }catch(e){}
+}
+function renderTasks(){
+  const el=document.getElementById("taskList");
+  if(!TASKS.length){el.innerHTML='<div class="empty">אין משימות עדיין. הוסף למעלה 👆</div>';return;}
+  el.innerHTML=TASKS.map(t=>`<div class="tk ${t.done?'done':''}">
+      <input type="checkbox" class="cb" ${t.done?'checked':''} onchange="toggleTask('${t.id}',this.checked)">
+      <div class="body"><div class="t">${esc(t.text)}</div>
+        <div class="sub">${t.client_name?`<span class="tag">👤 ${esc(t.client_name)}</span>`:''}${t.due_date?`<span>📅 ${esc(t.due_date)}</span>`:''}${t.details?`<span>${esc(t.details)}</span>`:''}</div>
+      </div>
+      <button class="abtn" onclick="delTask('${t.id}')" title="מחק">🗑</button>
+    </div>`).join("");
+}
+async function addTask(){
+  const text=val("tk_text").trim(); if(!text){document.getElementById("tk_text").focus();return;}
+  const o={text,client_name:val("tk_client").trim()||null,due_date:val("tk_due")||null,done:false};
+  const r=await api("/rest/v1/tasks",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(o)});
+  if(!r.ok){alert("הוספת משימה נכשלה");return;}
+  document.getElementById("tk_text").value="";document.getElementById("tk_client").value="";document.getElementById("tk_due").value="";
+  await loadTasks();
+}
+async function toggleTask(id,done){
+  await api("/rest/v1/tasks?id=eq."+id,{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({done})});
+  await loadTasks();
+}
+async function delTask(id){
+  if(!confirm("למחוק את המשימה?"))return;
+  await api("/rest/v1/tasks?id=eq."+id,{method:"DELETE",headers:{"Prefer":"return=minimal"}});
+  await loadTasks();
+}
+function quickTask(){
+  const c=CLIENTS.find(x=>x.id===_cardId); if(!c)return;
+  const t=prompt("משימה עבור "+c.name+":"); if(!t||!t.trim())return;
+  api("/rest/v1/tasks",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify({text:t.trim(),client_name:c.name,done:false})})
+    .then(r=>{if(r.ok){loadTasks();alert("✅ נוספה משימה");}else alert("הוספה נכשלה");});
 }
 async function loadClients(silent){
   if(!silent)setSync("טוען...",false);
@@ -450,9 +515,8 @@ function populateFilters(){
 }
 function setTab(t){
   activeTab=t;
-  document.querySelectorAll("#nav button").forEach((b,i)=>b.setAttribute("aria-selected", (i===0?"clients":"overview")===t));
-  document.getElementById("tab-clients").classList.toggle("hide",t!=="clients");
-  document.getElementById("tab-overview").classList.toggle("hide",t!=="overview");
+  document.querySelectorAll("#nav button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===t));
+  ["clients","tasks","overview"].forEach(x=>document.getElementById("tab-"+x).classList.toggle("hide",x!==t));
   render();
 }
 function sortBy(k){ if(sortKey===k)sortDir=-sortDir; else{sortKey=k;sortDir=1;} render(); }
@@ -490,6 +554,7 @@ function cell(c,k){
 function render(){
   tiles();populateFilters();
   if(activeTab==="overview"){renderOverview();return;}
+  if(activeTab==="tasks"){renderTasks();return;}
   const a=filtered();
   document.getElementById("count").textContent=`${a.length} לקוחות`;
   document.getElementById("grid").innerHTML = a.length
@@ -513,12 +578,6 @@ function renderOverview(){
 }
 function fld(k,v){return v?`<div class="field"><span class="k">${k}</span><span class="v">${v}</span></div>`:"";}
 const HAS=k=>CLIENTS.length?(k in CLIENTS[0]):false;
-function taskHtml(t){
-  const items=(t||"").split("\n").map(s=>s.trim()).filter(Boolean);
-  if(!items.length)return"";
-  return '<div class="field"><span class="k">משימות</span></div><div style="padding:4px 0 8px">'+
-    items.map(x=>`<div style="display:flex;gap:8px;padding:4px 0;font-size:14px"><span style="color:var(--accent)">☐</span><span>${esc(x)}</span></div>`).join("")+'</div>';
-}
 let _cardId=null;
 function openCard(id){ _cardId=id; renderCard(false); document.getElementById("ovl").classList.add("on"); }
 function renderCard(editing){
@@ -550,11 +609,13 @@ function renderCard(editing){
         ${fld("סטטוס ליד בישיר",esc(c.yashir_status))}
         ${fld("מס' שיחות מוקלטות",c.call_count||"")}
         ${fld("פרטי חשבון",c.bank_details?esc(c.bank_details).replace(/\n/g,"<br>"):"")}
-        ${taskHtml(c.tasks)}
         ${c.call_snippet?('<div class="field"><span class="k">קטע מהשיחה</span></div><div style="font-size:14px;color:var(--muted);padding:10px 14px;background:var(--surface-2);border-radius:8px;line-height:1.6">'+esc(c.call_snippet)+'</div>'):""}
         ${fld("הערות",esc(c.notes))}
       </div>
-      <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button></div>`;
+      <div class="rowbtns">
+        <button class="btn ghost" onclick="closeCard()">סגור</button>
+        <button class="btn ghost" onclick="quickTask()">➕ משימה ללקוח</button>
+      </div>`;
   } else {
     b.innerHTML=`
       <h2>עריכת פרטי לקוח</h2>
@@ -574,7 +635,6 @@ function renderCard(editing){
         </div>
         ${HAS('lead_date')?`<div><label>תאריך העברת ליד</label><input type="date" id="ed_lead_date" value="${esc(c.lead_date)}"></div>`:""}
         ${HAS('close_date')?`<div><label>תאריך סגירה</label><input type="date" id="ed_close_date" value="${esc(c.close_date)}"></div>`:""}
-        ${HAS('tasks')?`<div style="grid-column:1/-1"><label>משימות (שורה לכל מטלה — למשל: להתקשר ל... / להעביר X ל...)</label><textarea id="ed_tasks" rows="3">${esc(c.tasks)}</textarea></div>`:""}
         ${HAS('bank_details')?`<div style="grid-column:1/-1"><label>פרטי חשבון (בנק, סניף, מספר חשבון, שם בעל החשבון)</label><textarea id="ed_bank_details" rows="2">${esc(c.bank_details)}</textarea></div>`:""}
       </div>
       <div class="rowbtns">
@@ -589,7 +649,7 @@ function collectEdit(){
   o.channels=CHANS.filter((ch,i)=>document.getElementById("ch"+i).checked).join(", ");
   o.paid_to_avi=val("ed_paid_to_avi");
   o.status=val("ed_status");o.closed=(o.status||"").startsWith("נסגר");
-  ["lead_date","close_date","tasks","bank_details"].forEach(f=>{const el=document.getElementById("ed_"+f);if(el)o[f]=el.value;});
+  ["lead_date","close_date","bank_details"].forEach(f=>{const el=document.getElementById("ed_"+f);if(el)o[f]=el.value;});
   if(o.closed && ("close_date" in o) && !o.close_date) o.close_date=new Date().toISOString().slice(0,10);
   return o;
 }
