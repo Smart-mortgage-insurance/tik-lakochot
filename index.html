@@ -344,6 +344,7 @@ td .nm { font-weight: 600; color: var(--ink); }
       <nav class="nav" id="nav">
         <button data-tab="clients" aria-selected="true" onclick="setTab('clients')">📋 לקוחות</button>
         <button data-tab="tasks" aria-selected="false" onclick="setTab('tasks')">✅ משימות</button>
+        <button data-tab="payments" aria-selected="false" onclick="setTab('payments')">💰 תשלומים</button>
         <button data-tab="overview" aria-selected="false" onclick="setTab('overview')">📊 סקירה</button>
       </nav>
       <div class="acts">
@@ -384,6 +385,24 @@ td .nm { font-weight: 600; color: var(--ink); }
           <button class="btn" onclick="addTask()">➕ הוסף</button>
         </div>
         <div id="taskList"></div>
+      </div>
+    </div>
+    <div id="tab-payments" class="hide">
+      <div class="tiles" id="payKpis"></div>
+      <div class="brk">
+        <div class="box"><h3>הכנסות לפי ערוץ</h3><div id="payByChan"></div></div>
+        <div class="box"><h3>הכנסות לפי חודש</h3><div id="payByMonth"></div></div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--line);font-weight:700">הוצאות — מתנות ללקוחות, פרסום, מפנים</div>
+        <div class="taskadd">
+          <input id="ex_date" type="date" title="תאריך" style="max-width:160px">
+          <select class="flt" id="ex_type"><option>מתנה ללקוח</option><option>פרסום</option><option>תשלום למפנה</option><option>אחר</option></select>
+          <input id="ex_amount" inputmode="numeric" placeholder="סכום ₪" style="max-width:120px">
+          <input id="ex_payee" placeholder="למי / פירוט (אופציונלי)">
+          <button class="btn" onclick="addExpense()">➕ הוצאה</button>
+        </div>
+        <div id="expList"></div>
       </div>
     </div>
     <div id="tab-overview" class="hide"><div class="brk" id="brk"></div></div>
@@ -445,9 +464,9 @@ async function doLogout(){try{await fetch(SB_URL+"/auth/v1/logout",{method:"POST
 async function startApp(){
   document.getElementById("gate").classList.add("hide");
   document.getElementById("app").classList.remove("hide");
-  await loadClients(); loadTasks();
-  setInterval(()=>{if(!document.hidden){loadClients(true);loadTasks();}},30000);
-  window.addEventListener("focus",()=>{loadClients(true);loadTasks();});
+  await loadClients(); loadTasks(); loadExpenses();
+  setInterval(()=>{if(!document.hidden){loadClients(true);loadTasks();loadExpenses();}},30000);
+  window.addEventListener("focus",()=>{loadClients(true);loadTasks();loadExpenses();});
 }
 let TASKS=[];
 async function loadTasks(){
@@ -516,7 +535,7 @@ function populateFilters(){
 function setTab(t){
   activeTab=t;
   document.querySelectorAll("#nav button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===t));
-  ["clients","tasks","overview"].forEach(x=>document.getElementById("tab-"+x).classList.toggle("hide",x!==t));
+  ["clients","tasks","payments","overview"].forEach(x=>document.getElementById("tab-"+x).classList.toggle("hide",x!==t));
   render();
 }
 function sortBy(k){ if(sortKey===k)sortDir=-sortDir; else{sortKey=k;sortDir=1;} render(); }
@@ -555,6 +574,7 @@ function render(){
   tiles();populateFilters();
   if(activeTab==="overview"){renderOverview();return;}
   if(activeTab==="tasks"){renderTasks();return;}
+  if(activeTab==="payments"){renderPayments();return;}
   const a=filtered();
   document.getElementById("count").textContent=`${a.length} לקוחות`;
   document.getElementById("grid").innerHTML = a.length
@@ -563,6 +583,47 @@ function render(){
         <div class="cmeta"><span class="pill ${pillClass(c.status)}">${esc(c.status)}</span></div>
       </div>`).join("")
     : `<div class="empty" style="grid-column:1/-1">אין תוצאות מתאימות לחיפוש</div>`;
+}
+// ---- Payments (income aggregated from clients + expenses table) ----
+let EXPENSES=[];
+const _D=v=>parseInt(String(v||"").replace(/\D/g,""))||0;
+function payChan(c){const s=c.status||"";for(const x of ["ישיר","ליברה","שוירץ"])if(s.includes(x))return x;const ch=c.channels||"";for(const x of ["ישיר","ליברה","שוירץ"])if(ch.includes(x))return x;return "אחר";}
+async function loadExpenses(){
+  try{const r=await api("/rest/v1/expenses?select=*&order=date.desc,created_at.desc&limit=1000");
+    if(r.ok){EXPENSES=await r.json(); if(activeTab==="payments")renderPayments();}}catch(e){}
+}
+function renderPayments(){
+  const paidCl=CLIENTS.filter(c=>_D(c.paid_to_avi));
+  const income=paidCl.reduce((s,c)=>s+_D(c.paid_to_avi),0);
+  const byChan={"ישיר":0,"ליברה":0,"שוירץ":0}; paidCl.forEach(c=>{const k=payChan(c);byChan[k]=(byChan[k]||0)+_D(c.paid_to_avi);});
+  const gifts=CLIENTS.reduce((s,c)=>s+_D(c.commission_to_client),0);
+  const expTotal=EXPENSES.reduce((s,e)=>s+_D(e.amount),0);
+  const net=income-gifts-expTotal;
+  const K=[["acc",income,"סה״כ התקבל"],["warn",gifts,"מתנות ללקוחות"],["bad",expTotal,"הוצאות (פרסום/מפנים)"],[net>=0?"ok":"bad",net,"רווח נטו"]];
+  document.getElementById("payKpis").innerHTML=K.map(([c,n,l])=>`<div class="tile ${c}"><div class="n">${money(n)} ₪</div><div class="l">${l}</div></div>`).join("");
+  const bar=(arr)=>{const m=Math.max(1,...arr.map(x=>x[1]));return arr.map(([l,n])=>`<div class="brow"><span class="lbl">${esc(l)}</span><span class="bar"><span style="width:${Math.round(n/m*100)}%"></span></span><span class="v">${money(n)}</span></div>`).join("")||'<div style="color:var(--muted);font-size:14px;padding:8px 0">אין נתונים</div>';};
+  document.getElementById("payByChan").innerHTML=bar(["ישיר","ליברה","שוירץ"].map(x=>[x,byChan[x]||0]));
+  const byMonth={}; paidCl.forEach(c=>{const m=c.close_date?c.close_date.slice(0,7):(c.month||"ללא תאריך");byMonth[m]=(byMonth[m]||0)+_D(c.paid_to_avi);});
+  const months=Object.keys(byMonth).sort().reverse();
+  document.getElementById("payByMonth").innerHTML=bar(months.map(m=>[m,byMonth[m]]));
+  document.getElementById("expList").innerHTML=EXPENSES.length?EXPENSES.map(e=>`<div class="tk">
+      <div class="body"><div class="t">${money(_D(e.amount))} ₪ · ${esc(e.type||"")}</div>
+        <div class="sub">${e.payee?`<span class="tag">${esc(e.payee)}</span>`:""}${e.date?`<span>📅 ${esc(e.date)}</span>`:""}${e.note?`<span>${esc(e.note)}</span>`:""}</div></div>
+      <button class="abtn" onclick="delExpense('${e.id}')" title="מחק">🗑</button>
+    </div>`).join(""):'<div class="empty">אין הוצאות רשומות. הוסף למעלה 👆</div>';
+}
+async function addExpense(){
+  const amount=_D(val("ex_amount")); if(!amount){document.getElementById("ex_amount").focus();return;}
+  const o={date:val("ex_date")||null,type:val("ex_type"),amount,payee:val("ex_payee").trim()||null};
+  const r=await api("/rest/v1/expenses",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(o)});
+  if(!r.ok){alert("הוספת הוצאה נכשלה");return;}
+  document.getElementById("ex_amount").value="";document.getElementById("ex_payee").value="";
+  await loadExpenses();
+}
+async function delExpense(id){
+  if(!confirm("למחוק את ההוצאה?"))return;
+  await api("/rest/v1/expenses?id=eq."+id,{method:"DELETE",headers:{"Prefer":"return=minimal"}});
+  await loadExpenses();
 }
 function renderOverview(){
   const byStatus=STATUSES.map(s=>[s,CLIENTS.filter(c=>c.status===s).length]).filter(x=>x[1]);
