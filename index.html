@@ -743,25 +743,37 @@ function openLead(){
   restoreLeadDraft();
 }
 const LDKEYS=['ld_name','ld_phone','ld_id','ld_mort','ld_type','ld_prem','ld_age','ld_val'];
+let _draftTimer=null;
+function draftNote(html){const n=document.getElementById('ldDraftNote'); if(n){n.style.display=html?'block':'none'; n.innerHTML=html||'';}}
 function saveLeadDraft(){
   const o={}; let any=false;
   LDKEYS.forEach(k=>{const el=document.getElementById(k); if(el){o[k]=el.value; if(el.value&&k!=='ld_type')any=true;}});
   if(any) localStorage.setItem('lead_draft',JSON.stringify(o)); else localStorage.removeItem('lead_draft');
-  const n=document.getElementById('ldDraftNote');
-  if(n){n.style.display=any?'block':'none'; if(any)n.innerHTML='📝 טיוטה נשמרת אוטומטית · <a href="#" onclick="clearLeadDraft();return false" style="color:var(--accent);font-weight:600">נקה</a>';}
+  draftNote(any?'📝 טיוטה נשמרת אוטומטית בענן · <a href="#" onclick="clearLeadDraft();return false" style="color:var(--accent);font-weight:600">נקה</a>':'');
+  clearTimeout(_draftTimer); _draftTimer=setTimeout(cloudSaveDraft,800);   // debounced cloud sync
 }
-function restoreLeadDraft(){
-  let d; try{d=JSON.parse(localStorage.getItem('lead_draft')||'null');}catch(e){}
+async function cloudSaveDraft(){
+  try{
+    const raw=localStorage.getItem('lead_draft');
+    if(!raw){ await api("/rest/v1/drafts?key=eq.lead_draft",{method:"DELETE",headers:{"Prefer":"return=minimal"}}); return; }
+    await api("/rest/v1/drafts?on_conflict=key",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},
+      body:JSON.stringify({key:"lead_draft",data:JSON.parse(raw),updated_at:new Date().toISOString()})});
+  }catch(e){}
+}
+async function restoreLeadDraft(){
+  let d=null;
+  try{ const r=await api("/rest/v1/drafts?key=eq.lead_draft&select=data"); if(r.ok){const a=await r.json(); if(a.length&&a[0].data)d=a[0].data;} }catch(e){}
+  if(!d){ try{d=JSON.parse(localStorage.getItem('lead_draft')||'null');}catch(e){} }
   if(!d) return;
+  localStorage.setItem('lead_draft',JSON.stringify(d));
   LDKEYS.forEach(k=>{const el=document.getElementById(k); if(el&&d[k]!=null)el.value=d[k];});
-  const n=document.getElementById('ldDraftNote');
-  if(n){n.style.display='block'; n.innerHTML='📝 שוחזרה טיוטה שלא הושלמה · <a href="#" onclick="clearLeadDraft();return false" style="color:var(--accent);font-weight:600">נקה והתחל מחדש</a>';}
+  draftNote('📝 שוחזרה טיוטה שלא הושלמה (מהענן) · <a href="#" onclick="clearLeadDraft();return false" style="color:var(--accent);font-weight:600">נקה והתחל מחדש</a>');
 }
-function clearLeadDraft(){
+async function clearLeadDraft(){
   localStorage.removeItem('lead_draft');
+  try{ await api("/rest/v1/drafts?key=eq.lead_draft",{method:"DELETE",headers:{"Prefer":"return=minimal"}}); }catch(e){}
   LDKEYS.forEach(k=>{const el=document.getElementById(k); if(el)el.value=(k==='ld_type'?'חדש':'');});
-  const n=document.getElementById('ldDraftNote'); if(n)n.style.display='none';
-  const r=document.getElementById('recOut'); if(r)r.innerHTML='';
+  draftNote(''); const r=document.getElementById('recOut'); if(r)r.innerHTML='';
 }
 function computeRec(){
   const name=val('ld_name'), phone=val('ld_phone').replace(/\D/g,'').replace(/^972/,'').replace(/^0/,''), idn=val('ld_id');
@@ -812,6 +824,7 @@ async function saveLead(){
   const r=await api('/rest/v1/clients',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(o)});
   if(!r.ok){alert('שמירה נכשלה');return;}
   localStorage.removeItem('lead_draft');
+  try{ await api("/rest/v1/drafts?key=eq.lead_draft",{method:"DELETE",headers:{"Prefer":"return=minimal"}}); }catch(e){}
   closeCard();await loadClients();
 }
 
