@@ -726,19 +726,42 @@ let _lead=null;
 function openLead(){
   document.getElementById('cardBody').innerHTML=`
     <h2>💡 קליטת ליד חדש + מנוע המלצות</h2>
+    <div id="ldDraftNote" style="display:none;font-size:13px;background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:8px 12px;margin-bottom:12px"></div>
     <div class="edit">
-      <div><label>שם הלקוח</label><input id="ld_name"></div>
-      <div><label>טלפון</label><input id="ld_phone"></div>
-      <div><label>ת.ז. (עבור ביטוח ישיר)</label><input id="ld_id"></div>
-      <div><label>סכום משכנתא (₪)</label><input id="ld_mort" inputmode="numeric"></div>
-      <div><label>סוג פניה</label><select id="ld_type"><option>חדש</option><option>הסבה</option></select></div>
-      <div><label>פרמיה חודשית נוכחית (₪, אם ידוע)</label><input id="ld_prem" inputmode="numeric"></div>
-      <div><label>גיל הלקוח (אם ידוע)</label><input id="ld_age" inputmode="numeric"></div>
-      <div><label>ערך כינון למבנה (₪, אופציונלי)</label><input id="ld_val" inputmode="numeric"></div>
+      <div><label>שם הלקוח</label><input id="ld_name" oninput="saveLeadDraft()"></div>
+      <div><label>טלפון</label><input id="ld_phone" oninput="saveLeadDraft()"></div>
+      <div><label>ת.ז. (עבור ביטוח ישיר)</label><input id="ld_id" oninput="saveLeadDraft()"></div>
+      <div><label>סכום משכנתא (₪)</label><input id="ld_mort" inputmode="numeric" oninput="saveLeadDraft()"></div>
+      <div><label>סוג פניה</label><select id="ld_type" onchange="saveLeadDraft()"><option>חדש</option><option>הסבה</option></select></div>
+      <div><label>פרמיה חודשית נוכחית (₪, אם ידוע)</label><input id="ld_prem" inputmode="numeric" oninput="saveLeadDraft()"></div>
+      <div><label>גיל הלקוח (אם ידוע)</label><input id="ld_age" inputmode="numeric" oninput="saveLeadDraft()"></div>
+      <div><label>ערך כינון למבנה (₪, אופציונלי)</label><input id="ld_val" inputmode="numeric" oninput="saveLeadDraft()"></div>
     </div>
     <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="computeRec()">חשב המלצה</button></div>
     <div id="recOut" style="margin-top:24px"></div>`;
   document.getElementById('ovl').classList.add('on');
+  restoreLeadDraft();
+}
+const LDKEYS=['ld_name','ld_phone','ld_id','ld_mort','ld_type','ld_prem','ld_age','ld_val'];
+function saveLeadDraft(){
+  const o={}; let any=false;
+  LDKEYS.forEach(k=>{const el=document.getElementById(k); if(el){o[k]=el.value; if(el.value&&k!=='ld_type')any=true;}});
+  if(any) localStorage.setItem('lead_draft',JSON.stringify(o)); else localStorage.removeItem('lead_draft');
+  const n=document.getElementById('ldDraftNote');
+  if(n){n.style.display=any?'block':'none'; if(any)n.innerHTML='📝 טיוטה נשמרת אוטומטית · <a href="#" onclick="clearLeadDraft();return false" style="color:var(--accent);font-weight:600">נקה</a>';}
+}
+function restoreLeadDraft(){
+  let d; try{d=JSON.parse(localStorage.getItem('lead_draft')||'null');}catch(e){}
+  if(!d) return;
+  LDKEYS.forEach(k=>{const el=document.getElementById(k); if(el&&d[k]!=null)el.value=d[k];});
+  const n=document.getElementById('ldDraftNote');
+  if(n){n.style.display='block'; n.innerHTML='📝 שוחזרה טיוטה שלא הושלמה · <a href="#" onclick="clearLeadDraft();return false" style="color:var(--accent);font-weight:600">נקה והתחל מחדש</a>';}
+}
+function clearLeadDraft(){
+  localStorage.removeItem('lead_draft');
+  LDKEYS.forEach(k=>{const el=document.getElementById(k); if(el)el.value=(k==='ld_type'?'חדש':'');});
+  const n=document.getElementById('ldDraftNote'); if(n)n.style.display='none';
+  const r=document.getElementById('recOut'); if(r)r.innerHTML='';
 }
 function computeRec(){
   const name=val('ld_name'), phone=val('ld_phone').replace(/\D/g,'').replace(/^972/,'').replace(/^0/,''), idn=val('ld_id');
@@ -788,6 +811,7 @@ async function saveLead(){
     mortgage:_lead.mort?String(_lead.mort):null,status:'ממתין לשליחת ליד',channels:_lead.chans,notes:'ליד חדש (ממנוע ההמלצה)'};
   const r=await api('/rest/v1/clients',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(o)});
   if(!r.ok){alert('שמירה נכשלה');return;}
+  localStorage.removeItem('lead_draft');
   closeCard();await loadClients();
 }
 
