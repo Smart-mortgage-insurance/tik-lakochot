@@ -937,12 +937,18 @@ function renderDoc(){
       <select id="dc_type" onchange="window._docType=this.value;renderDoc()">
         <option ${type==='קבלה'?'selected':''}>קבלה</option>
         <option ${type==='דרישת תשלום'?'selected':''}>דרישת תשלום (חשבון עסקה - ליברה)</option>
+        <option ${type==='ליד לישיר'?'selected':''}>ליד לישיר (טופס להעלאה)</option>
       </select></div>
       ${type==='קבלה'?`
         <div><label>עבור חברה</label><select id="dc_co"><option>ליברה</option><option>ביטוח ישיר</option></select></div>
         <div><label>תאריך</label><input id="dc_date" value="${new Date().toLocaleDateString('he-IL')}"></div>
         <div><label>סכום (₪)</label><input id="dc_amt" inputmode="numeric"></div>
         <div><label>הערה / עבור...</label><input id="dc_note" value="ספק לידים ביטוח משכנתא"></div>
+      `:type.startsWith('ליד לישיר')?`
+        <div><label>שם הלקוח</label><input id="dc_lname"></div>
+        <div><label>סכום משכנתא (₪)</label><input id="dc_lmort" inputmode="numeric"></div>
+        <div><label>ת.ז. (אופציונלי)</label><input id="dc_lid" inputmode="numeric"></div>
+        <div><label>טלפון (אופציונלי)</label><input id="dc_lphone" inputmode="numeric"></div>
       `:`
         <div style="grid-column: 1 / -1;">
           <label>פירוט שורות (שם, תיאור, סכום)</label>
@@ -953,7 +959,7 @@ function renderDoc(){
     </div>
     <div class="rowbtns"><button class="btn ghost" onclick="closeCard()">סגור</button><button class="btn" onclick="genDoc()">הצג טיוטה</button></div>
     <div id="docPrev" style="margin-top:24px"></div>`;
-  if(type!=='קבלה') renderItems();
+  if(type.startsWith('דרישת')) renderItems();
 }
 function renderItems(){
   const el=document.getElementById('dc_items'); if(!el)return;
@@ -973,6 +979,16 @@ function genDoc(){
       <table><tr><th>אמצעי תשלום</th><th>תאריך הפקה</th><th>סכום</th></tr>
       <tr><td>העברה בנקאית</td><td>${esc(date)}</td><td>₪ ${money(amt)}</td></tr></table>
       <div class="tot">סה"כ לתשלום: ₪ ${money(amt)}</div><div style="margin-top:12px; font-size:14px; color:#444;">הערות: עבור ${esc(note)}</div></div>`;
+  } else if(type.startsWith('ליד לישיר')){
+    const nm=val('dc_lname'), mort=num('dc_lmort'), idn=val('dc_lid'), ph=val('dc_lphone');
+    html=`<div class="doc"><h3>טופס ליד — ביטוח ישיר</h3><div class="hdr">${hdr}</div>
+      <table>
+      <tr><th>שם הלקוח</th><td>${esc(nm)}</td></tr>
+      ${idn?`<tr><th>תעודת זהות</th><td>${esc(idn)}</td></tr>`:''}
+      ${ph?`<tr><th>טלפון</th><td>${esc(ph)}</td></tr>`:''}
+      <tr><th>סכום משכנתא</th><td>₪ ${money(mort)}</td></tr>
+      </table>
+      <div style="margin-top:12px; font-size:14px; color:#444;">ליד להעלאה לפורטל ביטוח ישיר</div></div>`;
   } else {
     let total=0, rows='';
     _docItems.forEach(it=>{const a=parseInt((it.amt||'').replace(/\D/g,''))||0;total+=a;
