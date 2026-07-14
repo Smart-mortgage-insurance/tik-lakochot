@@ -468,7 +468,7 @@ async function startApp(){
   setInterval(()=>{if(!document.hidden){loadClients(true);loadTasks();loadExpenses();}},30000);
   window.addEventListener("focus",()=>{loadClients(true);loadTasks();loadExpenses();});
 }
-let TASKS=[];
+let TASKS=[], _editTaskId=null;
 async function loadTasks(){
   try{
     const r=await api("/rest/v1/tasks?select=*&order=done.asc,due_date.asc,created_at.asc&limit=1000");
@@ -478,13 +478,38 @@ async function loadTasks(){
 function renderTasks(){
   const el=document.getElementById("taskList");
   if(!TASKS.length){el.innerHTML='<div class="empty">אין משימות עדיין. הוסף למעלה 👆</div>';return;}
-  el.innerHTML=TASKS.map(t=>`<div class="tk ${t.done?'done':''}">
+  const inp='background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:9px;color:var(--ink);font:inherit';
+  el.innerHTML=TASKS.map(t=>{
+    if(t.id===_editTaskId){
+      return `<div class="tk">
+        <div class="body" style="display:flex;flex-direction:column;gap:6px;width:100%">
+          <input id="et_text_${t.id}" value="${esc(t.text)}" style="${inp}">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <input id="et_client_${t.id}" placeholder="לקוח (אופציונלי)" value="${esc(t.client_name||'')}" style="flex:1;min-width:120px;${inp}">
+            <input id="et_due_${t.id}" type="date" value="${esc(t.due_date||'')}" style="${inp}">
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="abtn" style="color:var(--ok)" onclick="saveTask('${t.id}')" title="שמור">✓</button>
+          <button class="abtn" onclick="cancelEditTask()" title="ביטול">✕</button>
+        </div>
+      </div>`;
+    }
+    const cl=t.client_name?CLIENTS.find(c=>c.name===t.client_name):null;
+    const clientTag=t.client_name?(cl
+      ?`<span class="tag" style="cursor:pointer;background:var(--accent-soft);color:var(--accent);border-color:transparent" onclick="openCard('${cl.id}')" title="פתח כרטיס לקוח">👤 ${esc(t.client_name)} ↗</span>`
+      :`<span class="tag">👤 ${esc(t.client_name)}</span>`):'';
+    return `<div class="tk ${t.done?'done':''}">
       <input type="checkbox" class="cb" ${t.done?'checked':''} onchange="toggleTask('${t.id}',this.checked)">
       <div class="body"><div class="t">${esc(t.text)}</div>
-        <div class="sub">${t.client_name?`<span class="tag">👤 ${esc(t.client_name)}</span>`:''}${t.due_date?`<span>📅 ${esc(t.due_date)}</span>`:''}${t.details?`<span>${esc(t.details)}</span>`:''}</div>
+        <div class="sub">${clientTag}${t.due_date?`<span>📅 ${esc(t.due_date)}</span>`:''}${t.details?`<span>${esc(t.details)}</span>`:''}</div>
       </div>
-      <button class="abtn" onclick="delTask('${t.id}')" title="מחק">🗑</button>
-    </div>`).join("");
+      <div style="display:flex;gap:6px">
+        <button class="abtn" onclick="editTask('${t.id}')" title="עריכה">✎</button>
+        <button class="abtn" onclick="delTask('${t.id}')" title="מחק">🗑</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 async function addTask(){
   const text=val("tk_text").trim(); if(!text){document.getElementById("tk_text").focus();return;}
@@ -502,6 +527,15 @@ async function delTask(id){
   if(!confirm("למחוק את המשימה?"))return;
   await api("/rest/v1/tasks?id=eq."+id,{method:"DELETE",headers:{"Prefer":"return=minimal"}});
   await loadTasks();
+}
+function editTask(id){ _editTaskId=id; renderTasks(); document.getElementById("et_text_"+id).focus(); }
+function cancelEditTask(){ _editTaskId=null; renderTasks(); }
+async function saveTask(id){
+  const text=val("et_text_"+id).trim(); if(!text){document.getElementById("et_text_"+id).focus();return;}
+  const o={text, client_name:val("et_client_"+id).trim()||null, due_date:val("et_due_"+id)||null};
+  const r=await api("/rest/v1/tasks?id=eq."+id,{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify(o)});
+  if(!r.ok){alert("שמירת המשימה נכשלה");return;}
+  _editTaskId=null; await loadTasks();
 }
 function quickTask(){
   const c=CLIENTS.find(x=>x.id===_cardId); if(!c)return;
